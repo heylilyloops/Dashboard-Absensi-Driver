@@ -1,0 +1,553 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Monitoring Absensi Driver</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<style>
+:root{
+  --bg:#f4f6fb; --surface:#ffffff; --navy:#1a2e6b; --navy-2:#24398a;
+  --ink:#0f172a; --ink-2:#475569; --muted:#94a3b8; --line:#e2e8f0; --grid:#eef1f6;
+  --accent:#2563eb;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100; --s5:#e87ba4;
+  --good:#0ca30c; --good-ink:#006300; --warn:#fab219; --crit:#d03b3b;
+  --radius:12px;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:14px/1.45 "Plus Jakarta Sans",system-ui,sans-serif}
+.mono{font-family:"JetBrains Mono",ui-monospace,monospace}
+header{background:var(--navy);color:#fff;padding:18px 28px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+header h1{margin:0;font-size:19px;font-weight:700;letter-spacing:-.01em}
+header .sub{font-size:12.5px;color:#c7d2fe;margin-top:2px}
+header .upd{font-size:12px;color:#c7d2fe;text-align:right}
+main{max-width:1440px;margin:0 auto;padding:20px 28px 48px}
+
+/* filters */
+.filters{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;display:flex;flex-wrap:wrap;gap:12px 16px;align-items:flex-end;margin-bottom:18px}
+.f{display:flex;flex-direction:column;gap:4px;min-width:130px}
+.f label{font-size:11px;font-weight:600;color:var(--ink-2);text-transform:uppercase;letter-spacing:.04em}
+.f select,.f input{font:inherit;font-size:13px;border:1px solid var(--line);border-radius:8px;padding:7px 10px;background:#fff;color:var(--ink)}
+.f select:focus,.f input:focus{outline:2px solid var(--accent);outline-offset:-1px}
+.btn{font:inherit;font-size:13px;font-weight:600;border:1px solid var(--line);background:#fff;border-radius:8px;padding:7px 12px;cursor:pointer;color:var(--ink)}
+.btn:hover{background:#f1f5f9}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.spacer{flex:1}
+
+/* section */
+.sec-title{display:flex;align-items:baseline;gap:10px;margin:26px 0 12px}
+.sec-title h2{margin:0;font-size:15px;font-weight:700}
+.sec-title span{font-size:12.5px;color:var(--ink-2)}
+
+/* KPI */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px}
+.kpi .lbl{font-size:12px;color:var(--ink-2);font-weight:600}
+.kpi .val{font-size:26px;font-weight:800;letter-spacing:-.02em;margin-top:6px}
+.kpi .val small{font-size:14px;font-weight:600;color:inherit;opacity:.75;margin-left:5px}
+.kpi .note{font-size:11.5px;color:var(--muted);margin-top:4px}
+.kpi.hero{background:var(--navy);border-color:var(--navy);color:#fff}
+.kpi.hero .lbl,.kpi.hero .note{color:#c7d2fe}
+
+/* cards / charts */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:2fr 1fr;gap:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;min-width:0}
+.card h3{margin:0;font-size:13.5px;font-weight:700}
+.card .desc{font-size:12px;color:var(--ink-2);margin:3px 0 12px}
+.chart{position:relative;height:280px}
+.chart.tall{height:340px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;margin:-2px 0 10px;font-size:12px;color:var(--ink-2)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+
+/* tables */
+.tbl-wrap{overflow:auto;max-height:560px;border-top:1px solid var(--line);margin:0 -18px -16px}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th,td{padding:8px 10px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child,th.l,td.l{text-align:left}
+thead th{position:sticky;top:0;background:#f8fafc;font-size:11px;color:var(--ink-2);font-weight:700;text-transform:uppercase;letter-spacing:.03em;cursor:pointer;user-select:none;border-bottom:1px solid var(--line)}
+thead th:hover{color:var(--ink)}
+thead th.sorted::after{content:" ▾";color:var(--accent)}
+thead th.sorted.asc::after{content:" ▴"}
+tbody tr:hover{background:#f8fafc}
+tfoot td{font-weight:700;background:#f8fafc;position:sticky;bottom:0;border-top:1px solid var(--line)}
+td.num{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12px}
+.pill{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;font-size:11.5px;font-weight:700;font-family:"JetBrains Mono",monospace}
+.pill.g{background:#e7f6e7;color:var(--good-ink)}
+.pill.a{background:#fff4dc;color:#8a5a00}
+.pill.r{background:#fde8e8;color:#a32424}
+.tbl-tools{display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
+.tbl-tools input{font:inherit;font-size:13px;border:1px solid var(--line);border-radius:8px;padding:7px 10px;min-width:240px}
+.count{font-size:12px;color:var(--ink-2)}
+
+/* states */
+#state{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:28px;text-align:center;color:var(--ink-2)}
+#state b{color:var(--ink)}
+.drop{margin-top:14px;font-size:12.5px}
+.method{font-size:12px;color:var(--ink-2);line-height:1.6}
+.method b{color:var(--ink)}
+.hidden{display:none!important}
+
+@media (max-width:1000px){.grid2,.grid3{grid-template-columns:1fr}}
+@media (max-width:640px){main{padding:16px}header{padding:14px 16px}.f{min-width:calc(50% - 8px)}}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>Monitoring Absensi &amp; Kehadiran Driver</h1>
+    <div class="sub">Driver &amp; Asst Driver · NDC Jababeka · Cikupa · Sidoarjo</div>
+  </div>
+  <div class="upd" id="upd">Memuat data…</div>
+</header>
+
+<main>
+  <div id="state">
+    <b>Memuat data dari GitHub…</b>
+    <div class="drop">Kalau data tidak muncul, muat CSV manual:
+      <input type="file" id="fileIn" accept=".csv" multiple></div>
+  </div>
+
+  <div id="app" class="hidden">
+    <!-- FILTERS -->
+    <div class="filters">
+      <div class="f"><label>Dari</label><input type="date" id="fFrom"></div>
+      <div class="f"><label>Sampai</label><input type="date" id="fTo"></div>
+      <div class="f"><label>Site</label><select id="fSite"></select></div>
+      <div class="f"><label>Facility</label><select id="fFac"></select></div>
+      <div class="f"><label>Jobdesk</label><select id="fJob"></select></div>
+      <div class="f"><label>Toleransi telat</label>
+        <select id="fTol"><option value="0">0 menit</option><option value="5" selected>5 menit</option><option value="10">10 menit</option><option value="15">15 menit</option></select></div>
+      <div class="spacer"></div>
+      <button class="btn" id="btnMTD">Bulan ini</button>
+      <button class="btn" id="btnReset">Reset</button>
+    </div>
+
+    <!-- 1. KEHADIRAN -->
+    <div class="sec-title"><h2>1 · Rekap Kehadiran</h2><span id="periodLbl"></span></div>
+    <div class="kpis" id="kpiAtt"></div>
+
+    <div class="grid3" style="margin-top:14px">
+      <div class="card">
+        <h3>Tingkat kehadiran harian per site</h3>
+        <div class="desc">(Hadir + Dinas) ÷ hari terjadwal (semua hari kecuali OFF)</div>
+        <div class="legend" id="lgTrend"></div>
+        <div class="chart"><canvas id="cTrend"></canvas></div>
+      </div>
+      <div class="card">
+        <h3>Komposisi ketidakhadiran per site</h3>
+        <div class="desc">Jumlah hari-orang tidak hadir pada hari terjadwal</div>
+        <div class="legend" id="lgAbs"></div>
+        <div class="chart"><canvas id="cAbs"></canvas></div>
+      </div>
+    </div>
+
+    <!-- 2. KEPATUHAN JADWAL -->
+    <div class="sec-title"><h2>2 · Kepatuhan Jadwal</h2><span>jam absen masuk vs jam mulai shift</span></div>
+    <div class="kpis" id="kpiSch"></div>
+    <div class="grid2" style="margin-top:14px">
+      <div class="card">
+        <h3>Distribusi selisih jam masuk</h3>
+        <div class="desc">Hari hadir dengan shift teridentifikasi · negatif = datang lebih awal</div>
+        <div class="chart"><canvas id="cLate"></canvas></div>
+      </div>
+      <div class="card">
+        <h3>Persentase telat per site &amp; jobdesk</h3>
+        <div class="desc">Hari telat ÷ hari hadir dengan shift teridentifikasi</div>
+        <div class="legend" id="lgLateSite"></div>
+        <div class="chart"><canvas id="cLateSite"></canvas></div>
+      </div>
+    </div>
+
+    <!-- 3. DURASI & OT -->
+    <div class="sec-title"><h2>3 · Durasi Kerja &amp; Potensi OT</h2><span>dihitung dari jam absen, bukan OT yang disetujui</span></div>
+    <div class="kpis" id="kpiOT"></div>
+    <div class="grid2" style="margin-top:14px">
+      <div class="card">
+        <h3>Potensi OT harian per site</h3>
+        <div class="desc">Total jam pulang melewati akhir shift, per tanggal</div>
+        <div class="legend" id="lgOT"></div>
+        <div class="chart"><canvas id="cOT"></canvas></div>
+      </div>
+      <div class="card">
+        <h3>Top 10 personel potensi OT</h3>
+        <div class="desc">Total jam setelah akhir shift pada periode terpilih</div>
+        <div class="chart tall"><canvas id="cTopOT"></canvas></div>
+      </div>
+    </div>
+
+    <!-- SITE SUMMARY -->
+    <div class="sec-title"><h2>Ringkasan per Site</h2></div>
+    <div class="card">
+      <div class="tbl-wrap" style="max-height:none"><table id="tSite"></table></div>
+    </div>
+
+    <!-- PERSON TABLE -->
+    <div class="sec-title"><h2>Detail per Personel</h2><span>klik judul kolom untuk mengurutkan</span></div>
+    <div class="card">
+      <div class="tbl-tools">
+        <input id="q" placeholder="Cari nama atau NIK…">
+        <span class="count" id="pCount"></span>
+        <div class="spacer"></div>
+        <button class="btn" id="btnCsv">Download CSV</button>
+      </div>
+      <div class="tbl-wrap"><table id="tPerson"></table></div>
+    </div>
+
+    <!-- METHOD -->
+    <div class="sec-title"><h2>Definisi</h2></div>
+    <div class="card method">
+      <b>Hari terjadwal</b> = semua baris kecuali status OFF. <b>Kehadiran</b> = (Hadir + Dinas/Tugas Luar Kota) ÷ hari terjadwal.
+      <b>Status</b> dibaca dari kolom DESCRIPTION. <br>
+      <b>Shift</b> diambil dari kode ROSTER aktual; jam mulai/selesai dicari dari semua teks ROSTER PEOPLEPRO di data (mis. “D0008 05:50 - 13:30”).
+      Bila kode aktual bukan shift (PL, GC, LK, dll.), dipakai kode PeoplePro. Hari tanpa shift yang bisa dikenali, atau dengan selisih jam masuk &gt; 6 jam, tidak dihitung di kepatuhan jadwal maupun OT. <br>
+      <b>Telat</b> = jam absen masuk &gt; jam mulai shift + toleransi. <b>Roster beda</b> = kode ROSTER aktual ≠ kode ROSTER PEOPLEPRO (keduanya kode shift). <br>
+      <b>Durasi kerja</b> = jam absen pulang − jam absen masuk. <b>Potensi OT</b> = jam absen pulang − jam selesai shift (jika positif).
+      <b>Tidak absen pulang</b> = hadir tanpa jam pulang, atau status pulang “Absen Pulang Tidak Ter…”. <b>Masuk saat OFF</b> = ada jam masuk pada hari ber-roster OFF.
+    </div>
+  </div>
+</main>
+
+<script>
+/* ================= CONFIG ================= */
+const CONFIG = {
+  BASE_URL: 'https://raw.githubusercontent.com/heylilyloops/dashboard-absensi-driver/main/data/',
+  FILES: ['NDC_JABABEKA.csv','NDC_CIKUPA.csv','NDC_SIDOARJO.csv'],
+  MAX_SHIFT_GAP_MIN: 360,   // selisih jam masuk vs mulai shift > ini = shift tidak cocok, diabaikan
+  MAX_DURATION_H: 20,       // durasi kerja > ini dianggap data error
+};
+const SERIES = ['#2a78d6','#eb6834','#1baf7a','#eda100','#e87ba4'];
+const INK2 = '#475569', GRID = '#eef1f6', AXIS = '#cbd5e1';
+
+/* ================= HELPERS ================= */
+const $ = id => document.getElementById(id);
+const fmt = (n,d=0) => (n==null||!isFinite(n)) ? '–' : n.toLocaleString('id-ID',{minimumFractionDigits:d,maximumFractionDigits:d});
+const pct = (a,b,d=1) => b ? fmt(a/b*100,d)+'%' : '–';
+const toMin = t => { if(!t) return null; const m=String(t).match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?/); return m ? (+m[1])*60+(+m[2])+((+m[3]||0)/60) : null; };
+const hhmm = m => { if(m==null) return '–'; const s=m<0?'-':''; m=Math.abs(Math.round(m)); return s+Math.floor(m/60)+'j '+String(m%60).padStart(2,'0')+'m'; };
+const shiftRe = /^\s*(\S+)\s+(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})/;
+const codeOf = s => { const m=String(s||'').match(shiftRe); return m ? m[1] : String(s||'').trim().split(/\s+/)[0]; };
+
+function normDate(v){
+  if(!v) return '';
+  v=String(v).trim();
+  let m=v.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/); if(m) return `${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;
+  m=v.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/); if(m){ let mo=+m[1], d=+m[2]; if(mo>12){[mo,d]=[d,mo];} return `${m[3]}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`; }
+  return v;
+}
+function normJob(v){ v=String(v||'').toUpperCase(); return v.includes('ASS') ? 'ASST DRIVER' : (v.includes('DRIVER') ? 'DRIVER' : v); }
+
+function classify(r){
+  const d = String(r['DESCRIPTION']||r['ABSEN IN']||'').toLowerCase();
+  if(/^hadir/.test(d)) return 'HADIR';
+  if(/dinas|tgs luar|tugas luar/.test(d)) return 'DINAS';
+  if(/^off\b/.test(d)) return 'OFF';
+  if(/sakit/.test(d)) return 'SAKIT';
+  if(/cuti/.test(d)) return 'CUTI';
+  if(/izin|ijin/.test(d)) return 'IZIN';
+  if(/alpa|alpha|mangkir|tidak hadir|tanpa ket/.test(d)) return 'ALPA';
+  if(!d) return r['TIME ABSEN IN'] ? 'HADIR' : (String(r['ROSTER']).trim().toUpperCase()==='O' ? 'OFF' : 'ALPA');
+  return 'LAINNYA';
+}
+const ABS_KEYS = ['SAKIT','CUTI','IZIN','ALPA','LAINNYA'];
+const ABS_LBL  = {SAKIT:'Sakit',CUTI:'Cuti',IZIN:'Izin',ALPA:'Alpa / tanpa ket.',LAINNYA:'Lainnya'};
+
+/* ================= DATA PREP ================= */
+let ROWS = [], SHIFT = {};
+
+function prepare(raw){
+  // 1) peta kode shift -> jam, dari semua teks PeoplePro
+  SHIFT = {};
+  raw.forEach(r=>{
+    const m = String(r['ROSTER PEOPLEPRO']||'').match(shiftRe);
+    if(m && m[1].toUpperCase()!=='SHOFF' && !SHIFT[m[1]]) SHIFT[m[1]] = {s:toMin(m[2]), e:toMin(m[3])};
+  });
+  // 2) enrich per baris
+  ROWS = raw.filter(r=>r['NIK']).map(r=>{
+    const o = {
+      site: r['SITE'] || '', nik: String(r['NIK']).trim(), nama: String(r['NAMA']||'').trim(),
+      job: normJob(r['JOBDESK']), fac: String(r['FACILITY']||'').trim(), date: normDate(r['ABSEN_DATE']),
+      roster: String(r['ROSTER']||'').trim(), pp: codeOf(r['ROSTER PEOPLEPRO']),
+      tin: toMin(r['TIME ABSEN IN']), tout: toMin(r['TIME ABSEN OUT']),
+      outStat: String(r['ABSEN OUT']||''), status: classify(r)
+    };
+    o.present = o.status==='HADIR' || o.status==='DINAS';
+    o.offWork = o.status==='OFF' && o.tin!=null;
+    const code = SHIFT[o.roster] ? o.roster : (SHIFT[o.pp] ? o.pp : null);
+    o.shift = code;
+    o.mismatch = !!(SHIFT[o.roster] && SHIFT[o.pp] && o.roster!==o.pp);
+    o.noOut = o.present && (o.tout==null || /tidak ter/i.test(o.outStat));
+    // durasi
+    if(o.present && o.tin!=null && o.tout!=null){
+      let dur = o.tout - o.tin; if(dur<0) dur += 1440;
+      if(dur>0 && dur <= CONFIG.MAX_DURATION_H*60) o.dur = dur;
+    }
+    // kepatuhan & OT
+    if(o.present && code && o.tin!=null){
+      const sh = SHIFT[code];
+      let gap = o.tin - sh.s; if(gap>720) gap-=1440; if(gap<-720) gap+=1440;
+      if(Math.abs(gap) <= CONFIG.MAX_SHIFT_GAP_MIN){
+        o.gap = gap;
+        if(o.dur!=null){
+          let shiftLen = sh.e - sh.s; if(shiftLen<=0) shiftLen += 1440;
+          const outAbs = o.tin + o.dur;            // menit dari 00:00 hari masuk
+          const endAbs = o.tin - gap + shiftLen;   // akhir shift relatif hari yang sama
+          o.ot = Math.max(0, outAbs - endAbs);
+        }
+      }
+    }
+    if(!o.site) o.site = o.fac;
+    return o;
+  }).filter(o=>o.date);
+}
+
+/* ================= FILTER ================= */
+function opts(sel, vals, allLbl){ sel.innerHTML = `<option value="">${allLbl}</option>` + vals.map(v=>`<option>${v}</option>`).join(''); }
+const uniq = a => [...new Set(a)].filter(Boolean).sort();
+let minD, maxD;
+function setupFilters(){
+  const dates = ROWS.map(r=>r.date).sort(); minD = dates[0]; maxD = dates[dates.length-1];
+  $('fFrom').value = minD; $('fTo').value = maxD;
+  opts($('fSite'), uniq(ROWS.map(r=>r.site)), 'Semua site');
+  opts($('fFac'),  uniq(ROWS.map(r=>r.fac)),  'Semua facility');
+  opts($('fJob'),  uniq(ROWS.map(r=>r.job)),  'Semua jobdesk');
+  ['fFrom','fTo','fSite','fFac','fJob','fTol'].forEach(id=>$(id).addEventListener('change',render));
+  $('fSite').addEventListener('change',()=>{ // facility mengikuti site
+    const s=$('fSite').value; opts($('fFac'), uniq(ROWS.filter(r=>!s||r.site===s).map(r=>r.fac)), 'Semua facility'); render();
+  });
+  $('btnReset').onclick = ()=>{ $('fFrom').value=minD; $('fTo').value=maxD; ['fSite','fFac','fJob'].forEach(i=>$(i).value=''); $('fTol').value='5'; opts($('fFac'),uniq(ROWS.map(r=>r.fac)),'Semua facility'); render(); };
+  $('btnMTD').onclick = ()=>{ $('fFrom').value = maxD.slice(0,8)+'01'; $('fTo').value = maxD; render(); };
+  $('q').addEventListener('input',renderPersonTable);
+  $('btnCsv').onclick = downloadCsv;
+}
+function filtered(){
+  const f=$('fFrom').value, t=$('fTo').value, s=$('fSite').value, fa=$('fFac').value, j=$('fJob').value;
+  return ROWS.filter(r=>(!f||r.date>=f)&&(!t||r.date<=t)&&(!s||r.site===s)&&(!fa||r.fac===fa)&&(!j||r.job===j));
+}
+
+/* ================= AGGREGATION ================= */
+function agg(rows, tol){
+  const a = {n:rows.length, people:new Set(), sched:0, present:0, off:0, offWork:0, abs:{}, cmp:0, late:0, lateMin:0, early:0,
+             mismatch:0, durN:0, durSum:0, otSum:0, otDays:0, otDays1h:0, noOut:0};
+  ABS_KEYS.forEach(k=>a.abs[k]=0);
+  rows.forEach(r=>{
+    a.people.add(r.nik);
+    if(r.status==='OFF'){ a.off++; if(r.offWork) a.offWork++; return; }
+    a.sched++;
+    if(r.present) a.present++; else a.abs[r.status]=(a.abs[r.status]||0)+1;
+    if(r.mismatch) a.mismatch++;
+    if(r.noOut) a.noOut++;
+    if(r.gap!=null){ a.cmp++; if(r.gap>tol){ a.late++; a.lateMin+=r.gap; } }
+    if(r.dur!=null){ a.durN++; a.durSum+=r.dur; }
+    if(r.ot!=null){ a.otSum+=r.ot; if(r.ot>0) a.otDays++; if(r.ot>=60) a.otDays1h++; }
+  });
+  a.absTotal = ABS_KEYS.reduce((s,k)=>s+a.abs[k],0);
+  return a;
+}
+
+/* ================= RENDER ================= */
+const charts = {};
+function mkChart(id, cfg){ if(charts[id]) charts[id].destroy(); charts[id] = new Chart($(id), cfg); }
+Chart.defaults.font.family = '"Plus Jakarta Sans", system-ui, sans-serif';
+Chart.defaults.font.size = 11.5;
+Chart.defaults.color = INK2;
+const tipBase = {backgroundColor:'#0f172a',padding:10,cornerRadius:8,titleFont:{weight:'700'},boxPadding:4,usePointStyle:true};
+const legendHtml = (el, items) => { $(el).innerHTML = items.map(([c,l])=>`<span><i style="background:${c}"></i>${l}</span>`).join(''); };
+
+function kpi(label,val,note,hero){ return `<div class="kpi${hero?' hero':''}"><div class="lbl">${label}</div><div class="val">${val}</div><div class="note">${note||''}</div></div>`; }
+
+function render(){
+  const rows = filtered(), tol = +$('fTol').value, A = agg(rows,tol);
+  const sites = uniq(rows.map(r=>r.site));
+  const color = s => SERIES[uniq(ROWS.map(r=>r.site)).indexOf(s) % SERIES.length]; // warna ikut site, bukan urutan
+  $('periodLbl').textContent = `${$('fFrom').value} s/d ${$('fTo').value} · ${fmt(A.people.size)} personel · ${fmt(A.n)} baris`;
+
+  /* --- KPI kehadiran --- */
+  $('kpiAtt').innerHTML =
+    kpi('Tingkat kehadiran', pct(A.present,A.sched), `${fmt(A.present)} dari ${fmt(A.sched)} hari terjadwal`, true) +
+    kpi('Personel', fmt(A.people.size), 'NIK unik') +
+    kpi('Hari tidak hadir', fmt(A.absTotal), pct(A.absTotal,A.sched)+' dari hari terjadwal') +
+    kpi('Sakit', fmt(A.abs.SAKIT), pct(A.abs.SAKIT,A.sched)) +
+    kpi('Cuti', fmt(A.abs.CUTI), pct(A.abs.CUTI,A.sched)) +
+    kpi('Alpa / tanpa ket.', fmt(A.abs.ALPA + A.abs.IZIN + A.abs.LAINNYA), 'termasuk izin & lainnya') +
+    kpi('Masuk saat jadwal OFF', fmt(A.offWork), `dari ${fmt(A.off)} hari OFF`);
+
+  /* --- trend kehadiran --- */
+  const dates = uniq(rows.map(r=>r.date));
+  const trendDs = sites.map(s=>{
+    const byD = {}; rows.forEach(r=>{ if(r.site!==s||r.status==='OFF') return; const d=byD[r.date]||(byD[r.date]={p:0,n:0}); d.n++; if(r.present) d.p++; });
+    return {label:s, data:dates.map(d=>byD[d]&&byD[d].n ? +(byD[d].p/byD[d].n*100).toFixed(1) : null),
+      borderColor:color(s), backgroundColor:color(s), borderWidth:2, pointRadius:0, pointHoverRadius:5, cubicInterpolationMode:'monotone', spanGaps:true};
+  });
+  legendHtml('lgTrend', sites.map(s=>[color(s),s]));
+  mkChart('cTrend',{type:'line',data:{labels:dates.map(d=>d.slice(5)),datasets:trendDs},
+    options:{maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:false},tooltip:{...tipBase,callbacks:{title:i=>dates[i[0].dataIndex],label:c=>` ${c.dataset.label}: ${c.parsed.y==null?'–':fmt(c.parsed.y,1)+'%'}`}}},
+      scales:{x:{grid:{display:false},border:{color:AXIS},ticks:{maxTicksLimit:12}},
+              y:{suggestedMin:80,max:100,grid:{color:GRID},border:{display:false},ticks:{callback:v=>v+'%'}}}}});
+
+  /* --- komposisi absen per site --- */
+  const absCol = ABS_KEYS.map((k,i)=>SERIES[i]);
+  legendHtml('lgAbs', ABS_KEYS.map((k,i)=>[absCol[i],ABS_LBL[k]]));
+  const perSite = sites.map(s=>agg(rows.filter(r=>r.site===s),tol));
+  mkChart('cAbs',{type:'bar',data:{labels:sites,datasets:ABS_KEYS.map((k,i)=>({label:ABS_LBL[k],data:perSite.map(a=>a.abs[k]),
+      backgroundColor:absCol[i],borderColor:'#fff',borderWidth:{right:2},borderSkipped:false,borderRadius:0,barThickness:26}))},
+    options:{indexAxis:'y',maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{...tipBase,callbacks:{label:c=>` ${c.dataset.label}: ${fmt(c.parsed.x)} hari (${pct(c.parsed.x,perSite[c.dataIndex].sched)})`}}},
+      scales:{x:{stacked:true,grid:{color:GRID},border:{display:false}},y:{stacked:true,grid:{display:false},border:{color:AXIS}}}}});
+
+  /* --- KPI kepatuhan --- */
+  const lateAvg = A.late ? A.lateMin/A.late : null;
+  $('kpiSch').innerHTML =
+    kpi('Hari telat', pct(A.late,A.cmp), `${fmt(A.late)} dari ${fmt(A.cmp)} hari hadir ber-shift`, true) +
+    kpi('Rata-rata telat', A.late? fmt(lateAvg,0)+'<small>menit</small>':'–', 'pada hari yang telat') +
+    kpi('Roster aktual ≠ PeoplePro', fmt(A.mismatch), pct(A.mismatch,A.sched)+' dari hari terjadwal') +
+    kpi('Shift tak teridentifikasi', fmt(A.present - A.cmp), 'hari hadir, tidak masuk hitungan');
+
+  /* --- histogram selisih masuk --- */
+  const bdef = [['≤−31',-1e9,-30],['−30…−16',-30,-15],['−15…0',-15,0],['1…15',0,15],['16…30',15,30],['31…60',30,60],['>60',60,1e9]];
+  const gaps = rows.filter(r=>r.gap!=null).map(r=>r.gap);
+  const hist = bdef.map(([l,lo,hi])=>gaps.filter(g=>g>lo&&g<=hi).length);
+  mkChart('cLate',{type:'bar',data:{labels:bdef.map(b=>b[0]),datasets:[{label:'Hari',data:hist,
+      backgroundColor:bdef.map(b=>b[1]>=0?SERIES[1]:SERIES[0]),borderRadius:{topLeft:4,topRight:4},borderSkipped:'bottom',maxBarThickness:46}]},
+    options:{maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{...tipBase,callbacks:{label:c=>` ${fmt(c.parsed.y)} hari (${pct(c.parsed.y,gaps.length)})`}}},
+      scales:{x:{grid:{display:false},border:{color:AXIS},ticks:{maxRotation:0},title:{display:true,text:'menit dari jam mulai shift'}},y:{grid:{color:GRID},border:{display:false}}}}});
+
+  /* --- % telat per site x jobdesk --- */
+  const jobs = uniq(rows.map(r=>r.job));
+  legendHtml('lgLateSite', jobs.map((j,i)=>[SERIES[i],j]));
+  mkChart('cLateSite',{type:'bar',data:{labels:sites,datasets:jobs.map((j,i)=>({label:j,data:sites.map(s=>{const a=agg(rows.filter(r=>r.site===s&&r.job===j),tol);return a.cmp? +(a.late/a.cmp*100).toFixed(1):null;}),
+      backgroundColor:SERIES[i],borderRadius:{topLeft:4,topRight:4},borderSkipped:'bottom',maxBarThickness:40}))},
+    options:{maintainAspectRatio:false,datasets:{bar:{categoryPercentage:.6,barPercentage:.9}},
+      plugins:{legend:{display:false},tooltip:{...tipBase,callbacks:{label:c=>` ${c.dataset.label}: ${c.parsed.y==null?'–':fmt(c.parsed.y,1)+'%'}`}}},
+      scales:{x:{grid:{display:false},border:{color:AXIS}},y:{beginAtZero:true,grid:{color:GRID},border:{display:false},ticks:{callback:v=>v+'%'}}}}});
+
+  /* --- KPI durasi & OT --- */
+  $('kpiOT').innerHTML =
+    kpi('Total potensi OT', fmt(A.otSum/60,0)+'<small>jam</small>', `${fmt(A.otDays1h)} hari-orang ≥ 1 jam`, true) +
+    kpi('Rata-rata durasi kerja', hhmm(A.durN?A.durSum/A.durN:null), `dari ${fmt(A.durN)} hari dengan jam masuk & pulang`) +
+    kpi('Hari pulang lewat shift', pct(A.otDays,A.cmp), `${fmt(A.otDays)} hari-orang`) +
+    kpi('OT per personel', fmt(A.people.size? A.otSum/60/A.people.size:0,1)+'<small>jam</small>', 'rata-rata periode terpilih') +
+    kpi('Tidak absen pulang', fmt(A.noOut), pct(A.noOut,A.present)+' dari hari hadir');
+
+  /* --- OT harian per site --- */
+  legendHtml('lgOT', sites.map(s=>[color(s),s]));
+  mkChart('cOT',{type:'line',data:{labels:dates.map(d=>d.slice(5)),datasets:sites.map(s=>({label:s,
+      data:dates.map(d=>{const v=rows.filter(r=>r.site===s&&r.date===d&&r.ot!=null).reduce((t,r)=>t+r.ot,0);return +(v/60).toFixed(1);}),
+      borderColor:color(s),backgroundColor:color(s),borderWidth:2,pointRadius:0,pointHoverRadius:5,cubicInterpolationMode:'monotone'}))},
+    options:{maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:false},tooltip:{...tipBase,callbacks:{title:i=>dates[i[0].dataIndex],label:c=>` ${c.dataset.label}: ${fmt(c.parsed.y,1)} jam`}}},
+      scales:{x:{grid:{display:false},border:{color:AXIS},ticks:{maxTicksLimit:12}},y:{beginAtZero:true,grid:{color:GRID},border:{display:false},ticks:{callback:v=>v+' j'}}}}});
+
+  /* --- top 10 OT --- */
+  const P = people(rows,tol); const top = [...P].sort((a,b)=>b.ot-a.ot).filter(p=>p.ot>0).slice(0,10);
+  mkChart('cTopOT',{type:'bar',data:{labels:top.map(p=>p.nama.length>22?p.nama.slice(0,21)+'…':p.nama),datasets:[{label:'Jam OT',data:top.map(p=>+(p.ot/60).toFixed(1)),
+      backgroundColor:SERIES[0],borderRadius:{topRight:4,bottomRight:4},borderSkipped:'left',maxBarThickness:22}]},
+    options:{indexAxis:'y',maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{...tipBase,callbacks:{title:i=>top[i[0].dataIndex].nama,label:c=>{const p=top[c.dataIndex];return [` ${fmt(c.parsed.x,1)} jam potensi OT`,` ${p.site} · ${p.job} · ${p.otDays} hari`];}}}},
+      scales:{x:{beginAtZero:true,grid:{color:GRID},border:{display:false},ticks:{callback:v=>v+' j'}},y:{grid:{display:false},border:{color:AXIS}}}}});
+
+  renderSiteTable(rows,tol,sites);
+  PERSON = P; renderPersonTable();
+}
+
+function renderSiteTable(rows,tol,sites){
+  const line = (lbl,a)=>`<tr><td>${lbl}</td><td class="num">${fmt(a.people.size)}</td><td class="num">${fmt(a.sched)}</td><td class="num">${badge(a.present,a.sched,[97,93])}</td>
+    <td class="num">${fmt(a.abs.SAKIT)}</td><td class="num">${fmt(a.abs.CUTI)}</td><td class="num">${fmt(a.abs.IZIN+a.abs.ALPA+a.abs.LAINNYA)}</td>
+    <td class="num">${badge(a.late,a.cmp,[10,20],true)}</td><td class="num">${fmt(a.mismatch)}</td>
+    <td class="num">${hhmm(a.durN?a.durSum/a.durN:null)}</td><td class="num">${fmt(a.otSum/60,0)}</td><td class="num">${fmt(a.noOut)}</td><td class="num">${fmt(a.offWork)}</td></tr>`;
+  $('tSite').innerHTML = `<thead><tr><th>Site</th><th>Personel</th><th>Hari terjadwal</th><th>Kehadiran</th><th>Sakit</th><th>Cuti</th><th>Izin/Alpa</th><th>Telat</th><th>Roster beda</th><th>Avg durasi</th><th>OT (jam)</th><th>Tdk absen pulang</th><th>Masuk saat OFF</th></tr></thead>
+    <tbody>${sites.map(s=>line(s,agg(rows.filter(r=>r.site===s),tol))).join('')}</tbody><tfoot>${line('Total',agg(rows,tol))}</tfoot>`;
+}
+// pill status: higherBad=true untuk metrik yang makin tinggi makin buruk
+function badge(a,b,[t1,t2],higherBad){
+  if(!b) return '–'; const v=a/b*100; let c;
+  if(higherBad) c = v<=t1?'g':v<=t2?'a':'r'; else c = v>=t1?'g':v>=t2?'a':'r';
+  const icon = c==='g'?'●':c==='a'?'▲':'■';
+  return `<span class="pill ${c}">${icon} ${fmt(v,1)}%</span>`;
+}
+
+/* ================= PERSON TABLE ================= */
+let PERSON = [], sortKey='ot', sortAsc=false;
+function people(rows,tol){
+  const m={};
+  rows.forEach(r=>{
+    const p=m[r.nik]||(m[r.nik]={nik:r.nik,nama:r.nama,site:r.site,fac:r.fac,job:r.job,sched:0,present:0,sakit:0,cuti:0,alpa:0,cmp:0,late:0,lateMin:0,mismatch:0,durN:0,durSum:0,ot:0,otDays:0,noOut:0,offWork:0});
+    if(r.status==='OFF'){ if(r.offWork) p.offWork++; return; }
+    p.sched++; if(r.present) p.present++;
+    if(r.status==='SAKIT') p.sakit++; else if(r.status==='CUTI') p.cuti++; else if(!r.present) p.alpa++;
+    if(r.mismatch) p.mismatch++; if(r.noOut) p.noOut++;
+    if(r.gap!=null){ p.cmp++; if(r.gap>tol){p.late++; p.lateMin+=r.gap;} }
+    if(r.dur!=null){ p.durN++; p.durSum+=r.dur; }
+    if(r.ot!=null){ p.ot+=r.ot; if(r.ot>0) p.otDays++; }
+  });
+  return Object.values(m).map(p=>({...p, att:p.sched?p.present/p.sched*100:null, latePct:p.cmp?p.late/p.cmp*100:null,
+    lateAvg:p.late?p.lateMin/p.late:null, dur:p.durN?p.durSum/p.durN:null}));
+}
+const PCOLS = [
+  ['nama','Nama','l',p=>`${p.nama}<div style="font-size:11px;color:var(--muted)">${p.nik}</div>`],
+  ['site','Site','l'],['job','Jobdesk','l'],
+  ['sched','Hari terjadwal'],['present','Hadir'],['att','Kehadiran',null,p=>p.att==null?'–':badge(p.present,p.sched,[97,93])],
+  ['sakit','Sakit'],['cuti','Cuti'],['alpa','Izin/Alpa'],
+  ['late','Telat (hari)'],['latePct','% Telat',null,p=>p.latePct==null?'–':badge(p.late,p.cmp,[10,20],true)],['lateAvg','Avg telat',null,p=>p.lateAvg==null?'–':fmt(p.lateAvg,0)+' mnt'],
+  ['mismatch','Roster beda'],['dur','Avg durasi',null,p=>hhmm(p.dur)],['ot','OT (jam)',null,p=>fmt(p.ot/60,1)],['otDays','Hari OT'],
+  ['noOut','Tdk absen pulang'],['offWork','Masuk saat OFF']
+];
+function renderPersonTable(){
+  const q=$('q').value.trim().toLowerCase();
+  let list = PERSON.filter(p=>!q||p.nama.toLowerCase().includes(q)||p.nik.toLowerCase().includes(q));
+  list.sort((a,b)=>{ let x=a[sortKey],y=b[sortKey]; if(x==null) x=-1e9; if(y==null) y=-1e9;
+    const c = typeof x==='string' ? x.localeCompare(y) : x-y; return sortAsc?c:-c; });
+  $('pCount').textContent = `${fmt(list.length)} personel`;
+  $('tPerson').innerHTML = `<thead><tr>${PCOLS.map(([k,l,a])=>`<th data-k="${k}" class="${a||''} ${k===sortKey?'sorted'+(sortAsc?' asc':''):''}">${l}</th>`).join('')}</tr></thead>
+    <tbody>${list.map(p=>`<tr>${PCOLS.map(([k,l,a,f])=>`<td class="${a?'l':'num'}">${f?f(p):(typeof p[k]==='number'?fmt(p[k]):p[k])}</td>`).join('')}</tr>`).join('')}</tbody>`;
+  $('tPerson').querySelectorAll('th').forEach(th=>th.onclick=()=>{ const k=th.dataset.k; if(sortKey===k) sortAsc=!sortAsc; else {sortKey=k; sortAsc=['nama','site','job'].includes(k);} renderPersonTable(); });
+}
+function downloadCsv(){
+  const head=['NIK','Nama','Site','Facility','Jobdesk','Hari terjadwal','Hadir','Kehadiran %','Sakit','Cuti','Izin/Alpa','Telat (hari)','% Telat','Avg telat (mnt)','Roster beda','Avg durasi (jam)','OT (jam)','Hari OT','Tdk absen pulang','Masuk saat OFF'];
+  const r1=v=>v==null?'':Math.round(v*10)/10;
+  const lines=PERSON.map(p=>[p.nik,p.nama,p.site,p.fac,p.job,p.sched,p.present,r1(p.att),p.sakit,p.cuti,p.alpa,p.late,r1(p.latePct),r1(p.lateAvg),p.mismatch,r1(p.dur/60),r1(p.ot/60),p.otDays,p.noOut,p.offWork]);
+  const csv=[head,...lines].map(r=>r.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob(['﻿'+csv],{type:'text/csv'}));
+  a.download=`rekap_absensi_${$('fFrom').value}_${$('fTo').value}.csv`; a.click();
+}
+
+/* ================= LOAD ================= */
+function parseText(txt){ return Papa.parse(txt,{header:true,skipEmptyLines:true}).data; }
+function boot(raw, updLabel){
+  prepare(raw);
+  if(!ROWS.length){ $('state').innerHTML='<b>Data kosong.</b> Cek file CSV di folder data/.'; return; }
+  $('state').classList.add('hidden'); $('app').classList.remove('hidden');
+  $('upd').innerHTML = updLabel;
+  setupFilters(); render();
+}
+async function load(){
+  try{
+    const bust='?t='+Date.now();
+    const [meta,...txts] = await Promise.all([
+      fetch(CONFIG.BASE_URL+'meta.json'+bust).then(r=>r.ok?r.json():null).catch(()=>null),
+      ...CONFIG.FILES.map(f=>fetch(CONFIG.BASE_URL+f+bust).then(r=>{ if(!r.ok) throw new Error(f+' ('+r.status+')'); return r.text(); }))
+    ]);
+    const raw = txts.flatMap(parseText);
+    boot(raw, meta ? `Data diperbarui<br><b>${new Date(meta.updated_at).toLocaleString('id-ID',{dateStyle:'medium',timeStyle:'short'})}</b>` : 'Sumber: GitHub CSV');
+  }catch(e){
+    $('state').innerHTML = `<b>Gagal memuat data dari GitHub.</b><div style="margin-top:6px">${e.message}</div>
+      <div class="drop">Muat CSV manual: <input type="file" id="fileIn" accept=".csv" multiple></div>`;
+    bindFile();
+  }
+}
+function bindFile(){
+  $('fileIn').onchange = async ev => {
+    const txts = await Promise.all([...ev.target.files].map(f=>f.text()));
+    boot(txts.flatMap(parseText), 'Sumber: file lokal');
+  };
+}
+bindFile(); load();
+</script>
+</body>
+</html>
