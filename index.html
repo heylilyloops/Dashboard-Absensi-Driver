@@ -204,9 +204,9 @@ td.num{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12px}
       <b>Hari terjadwal</b> = semua baris kecuali status OFF. <b>Kehadiran</b> = (Hadir + Dinas/Tugas Luar Kota) ÷ hari terjadwal.
       <b>Status</b> dibaca dari kolom DESCRIPTION. <br>
       <b>Shift</b> diambil dari kode ROSTER aktual; jam mulai/selesai dicari dari semua teks ROSTER PEOPLEPRO di data (mis. “D0008 05:50 - 13:30”).
-      Bila kode aktual bukan shift (PL, GC, LK, dll.), dipakai kode PeoplePro. Hari tanpa shift yang bisa dikenali, atau dengan selisih jam masuk &gt; 6 jam, tidak dihitung di kepatuhan jadwal maupun OT. <br>
+      Bila kode aktual bukan shift (PL, GC, LK, dll.), dipakai kode PeoplePro. Kode roster shift yang jamnya tidak tercatat di PeoplePro (mis. M0066), kode UNSET, serta hari dengan jam masuk &gt; 2 jam setelah atau &gt; 4 jam sebelum mulai shift dianggap shift tidak teridentifikasi dan tidak dihitung di kepatuhan jadwal maupun OT. <br>
       <b>Telat</b> = jam absen masuk &gt; jam mulai shift + toleransi. <b>Roster beda</b> = kode ROSTER aktual ≠ kode ROSTER PEOPLEPRO (keduanya kode shift). <br>
-      <b>Durasi kerja</b> = jam absen pulang − jam absen masuk. <b>Potensi OT</b> = jam absen pulang − jam selesai shift (jika positif).
+      <b>Durasi kerja</b> = jam absen pulang − jam absen masuk. <b>Potensi OT</b> = jam absen pulang − jam selesai shift, hanya jika ≥ 30 menit.
       <b>Tidak absen pulang</b> = hadir tanpa jam pulang, atau status pulang “Absen Pulang Tidak Ter…”. <b>Masuk saat OFF</b> = ada jam masuk pada hari ber-roster OFF.
     </div>
   </div>
@@ -217,7 +217,9 @@ td.num{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12px}
 const CONFIG = {
   BASE_URL: 'https://raw.githubusercontent.com/heylilyloops/Dashboard-Absensi-Driver/main/data/',
   FILES: ['NDC_JABABEKA.csv','NDC_CIKUPA.csv','NDC_SIDOARJO.csv'],
-  MAX_SHIFT_GAP_MIN: 360,   // selisih jam masuk vs mulai shift > ini = shift tidak cocok, diabaikan
+  MAX_LATE_MIN: 120,        // masuk > 120 mnt setelah mulai shift = kemungkinan shift lain, tidak dihitung
+  MAX_EARLY_MIN: 240,       // masuk > 240 mnt sebelum mulai shift = kemungkinan shift lain, tidak dihitung
+  OT_MIN: 30,               // kelebihan jam < 30 mnt setelah akhir shift tidak dihitung OT
   MAX_DURATION_H: 20,       // durasi kerja > ini dianggap data error
 };
 const SERIES = ['#2a78d6','#eb6834','#1baf7a','#eda100','#e87ba4'];
@@ -242,19 +244,22 @@ function normDate(v){
 function normJob(v){ v=String(v||'').toUpperCase(); return v.includes('ASS') ? 'ASST DRIVER' : (v.includes('DRIVER') ? 'DRIVER' : v); }
 
 function classify(r){
-  const d = String(r['DESCRIPTION']||r['ABSEN IN']||'').toLowerCase();
-  if(/^hadir/.test(d)) return 'HADIR';
-  if(/dinas|tgs luar|tugas luar/.test(d)) return 'DINAS';
+  const d = String(r['DESCRIPTION']||r['ABSEN IN']||'').toLowerCase().trim();
+  const hasTime = !!(r['TIME ABSEN IN'] || r['TIME ABSEN OUT']);
+  // hadir, termasuk yang ditandai telat / lupa absen oleh PeoplePro
+  if(/^hadir|late present|terlambat|wfh|holiday overtime|absen masuk tidak terdeteksi/.test(d)) return 'HADIR';
+  if(/tidak absen datang/.test(d)) return hasTime ? 'HADIR' : 'ALPA';
+  if(/dinas|tgs luar|tugas luar|tgs dalam/.test(d)) return 'DINAS';
   if(/^off\b/.test(d)) return 'OFF';
   if(/sakit/.test(d)) return 'SAKIT';
   if(/cuti/.test(d)) return 'CUTI';
-  if(/izin|ijin/.test(d)) return 'IZIN';
+  if(/izin|ijin|melahirkan|meninggal|menikahkan|menikah/.test(d)) return 'IZIN';
   if(/alpa|alpha|mangkir|tidak hadir|tanpa ket/.test(d)) return 'ALPA';
   if(!d) return r['TIME ABSEN IN'] ? 'HADIR' : (String(r['ROSTER']).trim().toUpperCase()==='O' ? 'OFF' : 'ALPA');
   return 'LAINNYA';
 }
 const ABS_KEYS = ['SAKIT','CUTI','IZIN','ALPA','LAINNYA'];
-const ABS_LBL  = {SAKIT:'Sakit',CUTI:'Cuti',IZIN:'Izin',ALPA:'Alpa / tanpa ket.',LAINNYA:'Lainnya'};
+const ABS_LBL  = {SAKIT:'Sakit',CUTI:'Cuti',IZIN:'Izin (termasuk izin khusus)',ALPA:'Mangkir / tidak absen',LAINNYA:'Lainnya'};
 
 /* ================= DATA PREP ================= */
 let ROWS = [], SHIFT = {};
@@ -264,7 +269,7 @@ function prepare(raw){
   SHIFT = {};
   raw.forEach(r=>{
     const m = String(r['ROSTER PEOPLEPRO']||'').match(shiftRe);
-    if(m && m[1].toUpperCase()!=='SHOFF' && !SHIFT[m[1]]) SHIFT[m[1]] = {s:toMin(m[2]), e:toMin(m[3])};
+    if(m && !['SHOFF','UNSET'].includes(m[1].toUpperCase()) && !SHIFT[m[1]]) SHIFT[m[1]] = {s:toMin(m[2]), e:toMin(m[3])};
   });
   // 2) enrich per baris
   ROWS = raw.filter(r=>r['NIK']).map(r=>{
@@ -277,10 +282,12 @@ function prepare(raw){
     };
     o.present = o.status==='HADIR' || o.status==='DINAS';
     o.offWork = o.status==='OFF' && o.tin!=null;
-    const code = SHIFT[o.roster] ? o.roster : (SHIFT[o.pp] ? o.pp : null);
+    // kode roster berbentuk shift (huruf+angka / angka) tapi jamnya tidak diketahui -> jangan pakai jam PeoplePro
+    const looksShift = /^([A-Z]\d{3,4}|\d{2,4})$/i.test(o.roster);
+    const code = SHIFT[o.roster] ? o.roster : (!looksShift && SHIFT[o.pp] ? o.pp : null);
     o.shift = code;
     o.mismatch = !!(SHIFT[o.roster] && SHIFT[o.pp] && o.roster!==o.pp);
-    o.noOut = o.present && (o.tout==null || /tidak ter/i.test(o.outStat));
+    o.noOut = o.present && (o.tout==null || /tidak (ter|absen)/i.test(o.outStat));
     // durasi
     if(o.present && o.tin!=null && o.tout!=null){
       let dur = o.tout - o.tin; if(dur<0) dur += 1440;
@@ -290,13 +297,14 @@ function prepare(raw){
     if(o.present && code && o.tin!=null){
       const sh = SHIFT[code];
       let gap = o.tin - sh.s; if(gap>720) gap-=1440; if(gap<-720) gap+=1440;
-      if(Math.abs(gap) <= CONFIG.MAX_SHIFT_GAP_MIN){
+      if(gap <= CONFIG.MAX_LATE_MIN && gap >= -CONFIG.MAX_EARLY_MIN){
         o.gap = gap;
         if(o.dur!=null){
           let shiftLen = sh.e - sh.s; if(shiftLen<=0) shiftLen += 1440;
           const outAbs = o.tin + o.dur;            // menit dari 00:00 hari masuk
           const endAbs = o.tin - gap + shiftLen;   // akhir shift relatif hari yang sama
-          o.ot = Math.max(0, outAbs - endAbs);
+          const over = outAbs - endAbs;
+          o.ot = over >= CONFIG.OT_MIN ? over : 0;
         }
       }
     }
@@ -409,7 +417,7 @@ function render(){
     kpi('Shift tak teridentifikasi', fmt(A.present - A.cmp), 'hari hadir, tidak masuk hitungan');
 
   /* --- histogram selisih masuk --- */
-  const bdef = [['≤−31',-1e9,-30],['−30…−16',-30,-15],['−15…0',-15,0],['1…15',0,15],['16…30',15,30],['31…60',30,60],['>60',60,1e9]];
+  const bdef = [['≤−31',-1e9,-30],['−30…−16',-30,-15],['−15…0',-15,0],['1…15',0,15],['16…30',15,30],['31…60',30,60],['61…120',60,1e9]];
   const gaps = rows.filter(r=>r.gap!=null).map(r=>r.gap);
   const hist = bdef.map(([l,lo,hi])=>gaps.filter(g=>g>lo&&g<=hi).length);
   mkChart('cLate',{type:'bar',data:{labels:bdef.map(b=>b[0]),datasets:[{label:'Hari',data:hist,
@@ -431,7 +439,7 @@ function render(){
   $('kpiOT').innerHTML =
     kpi('Total potensi OT', fmt(A.otSum/60,0)+'<small>jam</small>', `${fmt(A.otDays1h)} hari-orang ≥ 1 jam`, true) +
     kpi('Rata-rata durasi kerja', hhmm(A.durN?A.durSum/A.durN:null), `dari ${fmt(A.durN)} hari dengan jam masuk & pulang`) +
-    kpi('Hari pulang lewat shift', pct(A.otDays,A.cmp), `${fmt(A.otDays)} hari-orang`) +
+    kpi('Hari dengan OT ≥ 30 mnt', pct(A.otDays,A.cmp), `${fmt(A.otDays)} hari-orang`) +
     kpi('OT per personel', fmt(A.people.size? A.otSum/60/A.people.size:0,1)+'<small>jam</small>', 'rata-rata periode terpilih') +
     kpi('Tidak absen pulang', fmt(A.noOut), pct(A.noOut,A.present)+' dari hari hadir');
 
