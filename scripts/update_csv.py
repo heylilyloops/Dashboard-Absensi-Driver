@@ -87,6 +87,7 @@ def main():
         ],
     )
     book = gspread.authorize(creds).open_by_key(SPREADSHEET_ID)
+    all_niks, min_date = set(), "9999"
     meta = {"updated_at": dt.datetime.now(dt.timezone(dt.timedelta(hours=7))).isoformat(timespec="minutes"), "files": {}}
 
     for title, fname in SHEETS.items():
@@ -107,13 +108,77 @@ def main():
         df["NIK"] = df["NIK"].astype(str).str.strip()
         df.insert(0, "SITE", title)
 
+        all_niks |= set(df["NIK"].map(norm_nik))
+        min_date = min(min_date, df["ABSEN_DATE"].min())
         df.to_csv(f"data/{fname}", index=False)
         meta["files"][fname] = len(df)
         print(f"OK {fname}: {len(df)} baris")
 
+    meta["variable_income"] = sync_variable_income(all_niks, min_date)
+
     with open("data/meta.json", "w") as f:
         json.dump(meta, f, indent=2)
     print("Selesai.")
+
+
+# ── Data OT approved & insentif dari dashboard Variable Income (repo partner) ──
+VI_URL = "https://raw.githubusercontent.com/rahmatpambudi-dot/variable-income/main/dashboard_variable_income.html"
+
+
+def norm_nik(n):
+    """Sama dengan normalize_nik() di repo Variable Income."""
+    n = str(n).strip()
+    try:
+        return str(int(n))
+    except ValueError:
+        return n.upper()
+
+
+def sync_variable_income(niks=None, min_date=""):
+    """Ambil DRIVERS dari dashboard Variable Income -> data/VI_DAILY.csv.
+    Hanya jam OT approved & tanda insentif (tanpa rupiah). Kalau gagal, file lama dipertahankan."""
+    import urllib.request
+    try:
+        with urllib.request.urlopen(VI_URL, timeout=60) as r:
+            html = r.read().decode("utf-8")
+        drivers = json.loads(re.search(r"const DRIVERS=(\[.*?\]);", html, re.S).group(1))
+        upd = re.search(r"Update: ([^<\"]+)", html)
+    except Exception as e:  # noqa: BLE001
+        print(f"WARN Variable Income tidak bisa diambil: {e}")
+        return {"status": "gagal", "error": str(e)[:200]}
+
+    rows = {}
+    for d in drivers:
+        nik = norm_nik(d.get("nik", ""))
+        for date, v in (d.get("dates") or {}).items():
+            k = (nik, date)
+            rows.setdefault(k, [0.0, 0])[0] += float(v.get("hours") or 0)
+        for date, v in (d.get("ins_dates") or {}).items():
+            if (v or 0) > 0:
+                rows.setdefault((nik, date), [0.0, 0])[1] = 1
+    site = {norm_nik(d["nik"]): (d.get("site", ""), d.get("bu", "")) for d in drivers}
+    out = pd.DataFrame(
+        [(n, dt_, round(h, 2), i, *site.get(n, ("", ""))) for (n, dt_), (h, i) in rows.items()],
+        columns=["NIK_N", "DATE", "OT_HOURS", "INSENTIF", "VI_SITE", "VI_BU"],
+    ).sort_values(["DATE", "NIK_N"])
+    if niks:  # cukup NIK & periode yang ada di data absensi
+        out = out[out.NIK_N.isin(niks) & (out.DATE >= min_date)]
+        site = {n: v for n, v in site.items() if n in niks}
+    # daftar site per NIK (dipakai untuk override site, mis. JAKARTA (KLS))
+    pd.DataFrame([(n, s, b) for n, (s, b) in site.items()], columns=["NIK_N", "VI_SITE", "VI_BU"]).to_csv(
+        "data/VI_PERSONEL.csv", index=False)
+    out.to_csv("data/VI_DAILY.csv", index=False)
+    ot_dates = out.loc[out.OT_HOURS > 0, "DATE"]
+    ins_dates = out.loc[out.INSENTIF > 0, "DATE"]
+    info = {
+        "status": "ok",
+        "update_label": upd.group(1).strip() if upd else "",
+        "ot_until": ot_dates.max() if len(ot_dates) else "",
+        "insentif_until": ins_dates.max() if len(ins_dates) else "",
+        "rows": len(out),
+    }
+    print(f"OK VI_DAILY.csv: {len(out)} baris, OT s/d {info['ot_until']}, insentif s/d {info['insentif_until']}")
+    return info
 
 
 if __name__ == "__main__":

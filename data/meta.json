@@ -4,5 +4,12 @@
     "NDC_JABABEKA.csv": 21539,
     "NDC_CIKUPA.csv": 8195,
     "NDC_SIDOARJO.csv": 5995
+  },
+  "variable_income": {
+    "status": "ok",
+    "update_label": "24 Sep 2026",
+    "ot_until": "2026-09-15",
+    "insentif_until": "2026-09-22",
+    "rows": 3321
   }
 }
