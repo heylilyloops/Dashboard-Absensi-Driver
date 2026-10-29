@@ -355,7 +355,7 @@ details.more>.inner{margin-top:8px}
         <b>Rentang lama kerja</b> = durasi absen masuk → pulang per hari, dibanding jam kerja normal <b>8 jam</b>: ≤ 8 j (normal), 8–10 j (lebih ≤ 2 j), 10–12 j (lebih 2–4 j, masih dalam batas lembur harian 4 jam PP 35/2021), &gt; 12 j (melewati batas). Durasi termasuk waktu istirahat; data &gt; 20 jam dianggap salah input. <b>Absen di luar radius</b> = status absen masuk atau pulang “Out Radius”; dihitung dari hari hadir yang punya status radius.<br>
         <b>Jam lewat shift</b> = jam absen pulang − akhir shift, hanya jika ≥ 30 menit. Ini jam kerja aktual, bukan OT yang dibayar.
         <b>Skema</b> dicocokkan per NIK &amp; tanggal dengan data Variable Income: OT approved / Insentif / Tanpa OT-insentif. Tanggal setelah cakupan data Variable Income ditandai “belum tercatat”. Rupiah dilihat di dashboard Variable Income.<br>
-        <b>Site &amp; NIK</b> mengikuti Variable Income: NIK angka tanpa nol di depan; MPP KLS Jakarta tampil sebagai Jakarta (KLS). BU dari kata pertama FACILITY (KLO dibaca KLS). Facility KLS HO = site Jakarta (KLS).
+        <b>Site &amp; NIK</b> mengikuti Variable Income: NIK angka tanpa nol di depan; MPP KLS Jakarta tampil sebagai Jakarta (KLS). BU dari kata pertama FACILITY (KLO dibaca KLS). Personel KLS HO ditempatkan sesuai lokasinya: yang ada di daftar MPP KLS Jakarta masuk Jakarta (KLS), sisanya Jababeka; facility KLS disatukan per site.
       </div>
     </details>
   </div>
@@ -494,8 +494,9 @@ function prepare(raw){
     o.bu = (o.fac.split(/\s+/)[0]||'').toUpperCase();
     // samakan site dengan Variable Income (MPP KLS Jakarta)
     if(VI){ const vs=VI.site.get(o.nikn); if(vs && /JAKARTA \(KLS\)/i.test(vs.site)) o.site='Jakarta (KLS)'; }
-    // KLS HO = Jakarta (KLS): satu site, satu facility
-    if(/^KLS HO$/i.test(o.fac)) o.site='Jakarta (KLS)';
+    // KLS HO ada di Jababeka & Jakarta: lokasi ikut daftar MPP KLS Jakarta (Variable Income),
+    // facility KLS disatukan per site supaya tidak terpecah
+    if(/^KLS\b/i.test(o.fac) && o.site==='Jababeka') o.fac='KLS JABABEKA';
     if(o.site==='Jakarta (KLS)') o.fac='KLS HO';
     // skema pembayaran hari itu (hanya untuk hari hadir dengan jam lewat shift)
     if(VI && o.present){
