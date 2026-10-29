@@ -146,6 +146,9 @@ details.more>.inner{margin-top:8px}
 .band::after{content:"";flex:1;height:1px;background:var(--line)}
 @media (max-width:1000px){.sum{grid-template-columns:repeat(2,1fr)}.pains{grid-template-columns:1fr}}
 @media (max-width:560px){.sum{grid-template-columns:1fr}}
+.c1-back{position:fixed;bottom:20px;right:20px;z-index:9999;background:#1e2d4a;color:#fff;padding:10px 18px;border-radius:30px;font-family:'Inter',"Plus Jakarta Sans",system-ui,sans-serif;font-size:13px;font-weight:600;text-decoration:none;box-shadow:0 4px 14px rgba(0,0,0,.2);display:flex;align-items:center;gap:8px}
+.c1-back:hover{background:#2a3d63}
+@media print{.c1-back{display:none}}
 </style>
 </head>
 <body>
@@ -308,6 +311,7 @@ details.more>.inner{margin-top:8px}
   </div>
 </main>
 
+<a href="https://rahmatpambudi-dot.github.io/connectone/" class="c1-back" aria-label="Kembali ke ConnectOne">← ConnectOne</a>
 <script>
 /* ================= CONFIG ================= */
 const CONFIG = {
