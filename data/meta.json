@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-10-28T15:09+07:00",
+  "updated_at": "2026-10-29T10:37+07:00",
   "files": {
     "NDC_JABABEKA.csv": 21539,
     "NDC_CIKUPA.csv": 8195,
@@ -7,9 +7,9 @@
   },
   "variable_income": {
     "status": "ok",
-    "update_label": "24 Sep 2026",
-    "ot_until": "2026-09-15",
-    "insentif_until": "2026-09-22",
-    "rows": 3321
+    "update_label": "28 Okt 2026",
+    "ot_until": "2026-10-15",
+    "insentif_until": "2026-10-25",
+    "rows": 8992
   }
 }
