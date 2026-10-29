@@ -355,7 +355,7 @@ details.more>.inner{margin-top:8px}
         <b>Rentang lama kerja</b> = durasi absen masuk → pulang per hari, dibanding jam kerja normal <b>8 jam</b>: ≤ 8 j (normal), 8–10 j (lebih ≤ 2 j), 10–12 j (lebih 2–4 j, masih dalam batas lembur harian 4 jam PP 35/2021), &gt; 12 j (melewati batas). Durasi termasuk waktu istirahat; data &gt; 20 jam dianggap salah input. <b>Absen di luar radius</b> = status absen masuk atau pulang “Out Radius”; dihitung dari hari hadir yang punya status radius.<br>
         <b>Jam lewat shift</b> = jam absen pulang − akhir shift, hanya jika ≥ 30 menit. Ini jam kerja aktual, bukan OT yang dibayar.
         <b>Skema</b> dicocokkan per NIK &amp; tanggal dengan data Variable Income: OT approved / Insentif / Tanpa OT-insentif. Tanggal setelah cakupan data Variable Income ditandai “belum tercatat”. Rupiah dilihat di dashboard Variable Income.<br>
-        <b>Site &amp; NIK</b> mengikuti Variable Income: NIK angka tanpa nol di depan; MPP KLS Jakarta tampil sebagai Jakarta (KLS). BU dari kata pertama FACILITY (KLO dibaca KLS). Facility KLS HO digabung ke KLS JABABEKA.
+        <b>Site &amp; NIK</b> mengikuti Variable Income: NIK angka tanpa nol di depan; MPP KLS Jakarta tampil sebagai Jakarta (KLS). BU dari kata pertama FACILITY (KLO dibaca KLS). Facility KLS HO = site Jakarta (KLS).
       </div>
     </details>
   </div>
@@ -452,7 +452,7 @@ function prepare(raw){
   ROWS = raw.filter(r=>r['NIK']).map(r=>{
     const o = {
       site: SITE_LABEL[r['SITE']] || r['SITE'] || '', nik: String(r['NIK']).trim(), nama: String(r['NAMA']||'').trim(),
-      job: normJob(r['JOBDESK']), fac: String(r['FACILITY']||'').trim().replace(/^KLO\b/i,'KLS').replace(/^KLS HO$/i,'KLS JABABEKA'), date: normDate(r['ABSEN_DATE']),
+      job: normJob(r['JOBDESK']), fac: String(r['FACILITY']||'').trim().replace(/^KLO\b/i,'KLS'), date: normDate(r['ABSEN_DATE']),
       roster: String(r['ROSTER']||'').trim(), pp: codeOf(r['ROSTER PEOPLEPRO']),
       tin: toMin(r['TIME ABSEN IN']), tout: toMin(r['TIME ABSEN OUT']),
       outStat: String(r['ABSEN OUT']||''), status: classify(r)
@@ -494,6 +494,9 @@ function prepare(raw){
     o.bu = (o.fac.split(/\s+/)[0]||'').toUpperCase();
     // samakan site dengan Variable Income (MPP KLS Jakarta)
     if(VI){ const vs=VI.site.get(o.nikn); if(vs && /JAKARTA \(KLS\)/i.test(vs.site)) o.site='Jakarta (KLS)'; }
+    // KLS HO = Jakarta (KLS): satu site, satu facility
+    if(/^KLS HO$/i.test(o.fac)) o.site='Jakarta (KLS)';
+    if(o.site==='Jakarta (KLS)') o.fac='KLS HO';
     // skema pembayaran hari itu (hanya untuk hari hadir dengan jam lewat shift)
     if(VI && o.present){
       const v = VI.day.get(o.nikn+'|'+o.date);
