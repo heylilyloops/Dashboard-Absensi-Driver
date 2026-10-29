@@ -199,14 +199,14 @@ details.more>.inner{margin-top:8px}
 
     <!-- ===== LAPISAN MANAJEMEN ===== -->
     <div class="band">Ringkasan</div>
-    <div class="sec-title"><h2>Kondisi periode ini</h2><span id="periodLbl"></span></div>
+    <div class="sec-title"><h2>Ringkasan Periode</h2><span id="periodLbl"></span></div>
     <div class="sum" id="sum"></div>
 
-    <div class="sec-title"><h2>Pain point</h2><span>diurutkan dari yang paling perlu ditindaklanjuti · merah = memburuk, hijau = membaik vs periode sebelumnya</span></div>
+    <div class="sec-title"><h2>Pain Point</h2><span>diurutkan dari yang paling perlu ditindaklanjuti · merah = memburuk, hijau = membaik vs periode sebelumnya</span></div>
     <div class="pains" id="pains"></div>
 
     <!-- 1 -->
-    <div class="sec-title"><h2>1 · Apakah orangnya cukup?</h2><span>kehadiran pada hari terjadwal</span></div>
+    <div class="sec-title"><h2>1 · Kehadiran MPP</h2><span>hadir, cuti, sakit, izin &amp; mangkir pada hari kerja terjadwal</span></div>
     <div class="grid3">
       <div class="card">
         <h3>Kehadiran per minggu</h3>
@@ -222,18 +222,18 @@ details.more>.inner{margin-top:8px}
       </div>
     </div>
     <div class="card" style="margin-top:14px">
-      <h3>Rekap kehadiran per facility</h3>
+      <h3>Rekap Kehadiran per Facility</h3>
       <div class="desc">Format sama dengan laporan Hub · warna sel makin pekat = makin banyak hari</div>
       <div class="tbl-wrap" style="max-height:none"><table class="hubtbl" id="tHub"></table></div>
     </div>
     <div class="card" style="margin-top:14px">
-      <h3>Watchlist karyawan</h3>
+      <h3>Watchlist Karyawan</h3>
       <div class="wl-note" id="wlNote"></div>
       <div class="tbl-wrap"><table class="hubtbl" id="tWatch"></table></div>
     </div>
 
     <!-- 2 -->
-    <div class="sec-title"><h2>2 · Apakah jadwal dipatuhi?</h2><span>telat masuk, tidak absen pulang &amp; lokasi absen</span></div>
+    <div class="sec-title"><h2>2 · Kepatuhan Jadwal</h2><span>telat masuk, tidak absen pulang &amp; lokasi absen</span></div>
     <div class="grid2">
       <div class="card">
         <h3>Telat masuk per minggu</h3>
@@ -251,7 +251,7 @@ details.more>.inner{margin-top:8px}
     <details class="more"><summary>Lihat detail kepatuhan jadwal</summary>
       <div class="inner grid2">
         <div class="card">
-          <h3>Seberapa telat?</h3>
+          <h3>Distribusi selisih jam masuk</h3>
           <div class="desc">Selisih jam masuk vs jam mulai shift · negatif = datang lebih awal</div>
           <div class="chart"><canvas id="cLate"></canvas></div>
         </div>
@@ -278,7 +278,7 @@ details.more>.inner{margin-top:8px}
     </details>
 
     <!-- 3 -->
-    <div class="sec-title"><h2>3 · Apakah beban kerja wajar &amp; terbayar?</h2><span>pulang ≥ 30 menit setelah akhir shift, dicocokkan dengan OT approved &amp; insentif</span></div>
+    <div class="sec-title"><h2>3 · Jam Kerja &amp; Lewat Shift</h2><span>lama kerja vs normal 8 jam · lewat shift dicocokkan dengan OT approved &amp; insentif</span></div>
     <div class="grid3">
       <div class="card">
         <h3>Lama kerja per hari, per minggu ⚠</h3>
@@ -308,7 +308,7 @@ details.more>.inner{margin-top:8px}
         <div class="chart"><canvas id="cOTSite"></canvas></div>
       </div>
     </div>
-    <details class="more"><summary>Lihat siapa yang paling sering lewat shift</summary>
+    <details class="more"><summary>Lihat personel dengan lewat shift terbanyak</summary>
       <div class="inner grid2">
         <div class="card">
           <h3>Top 10 lewat shift tanpa OT / insentif</h3>
@@ -326,12 +326,12 @@ details.more>.inner{margin-top:8px}
 
     <!-- ===== LAPISAN SITE ===== -->
     <div class="band" id="aksi">Tindak lanjut site</div>
-    <div class="sec-title"><h2>Ringkasan per site</h2><span>warna dibanding rata-rata semua site, bukan target</span></div>
+    <div class="sec-title"><h2>Ringkasan per Site</h2><span>warna dibanding rata-rata semua site, bukan target</span></div>
     <div class="card">
       <div class="tbl-wrap" style="max-height:none"><table id="tSite"></table></div>
     </div>
 
-    <div class="sec-title" id="daftar"><h2>Daftar personel</h2><span>pilih kategori untuk daftar tindak lanjut · klik judul kolom untuk mengurutkan</span></div>
+    <div class="sec-title" id="daftar"><h2>Daftar Personel</h2><span>pilih kategori untuk daftar tindak lanjut · klik judul kolom untuk mengurutkan</span></div>
     <div class="card">
       <div class="tbl-tools">
         <div class="chips" id="chips"></div>
