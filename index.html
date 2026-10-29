@@ -101,7 +101,7 @@ td.num{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12px}
 
 /* ===== v2: ringkasan, pain point, detail lipat ===== */
 .lead{font-size:13px;color:var(--ink-2);margin:-6px 0 14px}
-.sum{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.sum{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
 .tile{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px}
 .tile .q{font-size:12px;color:var(--ink-2);font-weight:600}
 .tile .v{font-size:30px;font-weight:800;letter-spacing:-.02em;margin:6px 0 2px}
@@ -212,7 +212,7 @@ details.more>.inner{margin-top:8px}
     </div>
 
     <!-- 2 -->
-    <div class="sec-title"><h2>2 · Apakah jadwal dipatuhi?</h2><span>telat masuk &amp; tidak absen pulang</span></div>
+    <div class="sec-title"><h2>2 · Apakah jadwal dipatuhi?</h2><span>telat masuk, tidak absen pulang &amp; lokasi absen</span></div>
     <div class="grid2">
       <div class="card">
         <h3>Telat masuk per minggu</h3>
@@ -225,6 +225,20 @@ details.more>.inner{margin-top:8px}
         <div class="desc">% hari hadir tanpa catatan jam pulang</div>
         <div class="legend" id="lgNoOutW"></div>
         <div class="chart"><canvas id="cNoOutW"></canvas></div>
+      </div>
+    </div>
+    <div class="grid2" style="margin-top:14px">
+      <div class="card">
+        <h3>Absen di luar radius per minggu</h3>
+        <div class="desc">% hari hadir dengan absen masuk atau pulang di luar radius lokasi</div>
+        <div class="legend" id="lgRadW"></div>
+        <div class="chart"><canvas id="cRadW"></canvas></div>
+      </div>
+      <div class="card">
+        <h3>Luar radius: saat masuk vs saat pulang</h3>
+        <div class="desc">% hari hadir per site</div>
+        <div class="legend" id="lgRadSite"></div>
+        <div class="chart"><canvas id="cRadSite"></canvas></div>
       </div>
     </div>
     <details class="more"><summary>Lihat detail kepatuhan jadwal</summary>
@@ -257,6 +271,19 @@ details.more>.inner{margin-top:8px}
         <div class="desc">Jam lewat shift menurut skema</div>
         <div class="legend" id="lgOTSite"></div>
         <div class="chart"><canvas id="cOTSite"></canvas></div>
+      </div>
+    </div>
+    <div class="grid2" style="margin-top:14px">
+      <div class="card">
+        <h3>Hari kerja &gt; 12 jam per minggu ⚠</h3>
+        <div class="desc">% hari kerja (absen masuk → pulang) lebih dari 12 jam</div>
+        <div class="legend" id="lgLongW"></div>
+        <div class="chart"><canvas id="cLongW"></canvas></div>
+      </div>
+      <div class="card">
+        <h3>Sebaran lama kerja per hari</h3>
+        <div class="desc">Jumlah hari kerja menurut durasi absen masuk → pulang</div>
+        <div class="chart"><canvas id="cDurHist"></canvas></div>
       </div>
     </div>
     <details class="more"><summary>Lihat siapa yang paling sering lewat shift</summary>
@@ -303,6 +330,7 @@ details.more>.inner{margin-top:8px}
         <b>Pembanding</b> = periode sebelumnya dengan panjang sama (mis. 4 minggu sebelumnya). Warna di tabel = dibanding rata-rata semua site pada periode &amp; filter yang sama. Keduanya <b>bukan target resmi</b>.<br>
         <b>Shift</b> dari kode ROSTER aktual; jam mulai/selesai dari teks ROSTER PEOPLEPRO. Kode bukan shift (PL, GC, LK, …) memakai kode PeoplePro. Kode shift yang jamnya tidak tercatat (mis. M0066), UNSET, serta jam masuk &gt; 2 jam setelah / &gt; 4 jam sebelum mulai shift dianggap <b>jadwal tidak terbaca</b> dan tidak dihitung di telat maupun lewat shift.<br>
         <b>Telat</b> = jam absen masuk &gt; mulai shift + toleransi. <b>Tidak absen pulang</b> = hadir tanpa jam pulang, atau status pulang “Tidak Terdeteksi / Tidak Absen Pulang”. <b>Masuk saat OFF</b> = ada jam masuk pada hari OFF.<br>
+        <b>Kerja &gt; 12 jam</b> = durasi absen masuk → pulang lebih dari 12 jam pada satu hari (data &gt; 20 jam dianggap salah input). <b>Absen di luar radius</b> = status absen masuk atau pulang “Out Radius”; dihitung dari hari hadir yang punya status radius.<br>
         <b>Jam lewat shift</b> = jam absen pulang − akhir shift, hanya jika ≥ 30 menit. Ini jam kerja aktual, bukan OT yang dibayar.
         <b>Skema</b> dicocokkan per NIK &amp; tanggal dengan data Variable Income: OT approved / Insentif / Tanpa OT-insentif. Tanggal setelah cakupan data Variable Income ditandai “belum tercatat”. Rupiah dilihat di dashboard Variable Income.<br>
         <b>Site &amp; NIK</b> mengikuti Variable Income: NIK angka tanpa nol di depan; MPP KLS Jakarta tampil sebagai Jakarta (KLS). BU dari kata pertama FACILITY (KLO dibaca KLS).
@@ -319,7 +347,8 @@ const CONFIG = {
   FILES: ['NDC_JABABEKA.csv','NDC_CIKUPA.csv','NDC_SIDOARJO.csv'],
   MAX_LATE_MIN: 120,        // masuk > 120 mnt setelah mulai shift = kemungkinan shift lain, tidak dihitung
   MAX_EARLY_MIN: 240,       // masuk > 240 mnt sebelum mulai shift = kemungkinan shift lain, tidak dihitung
-  OT_MIN: 30,               // kelebihan jam < 30 mnt setelah akhir shift tidak dihitung OT
+  OT_MIN: 30,
+  LONG_H: 12,               // hari kerja > 12 jam = risiko kelelahan               // kelebihan jam < 30 mnt setelah akhir shift tidak dihitung OT
   MAX_DURATION_H: 20,       // durasi kerja > ini dianggap data error
 };
 const SERIES = ['#2a78d6','#eb6834','#1baf7a','#eda100','#e87ba4'];
@@ -402,6 +431,10 @@ function prepare(raw){
     o.shift = code;
     o.mismatch = !!(SHIFT[o.roster] && SHIFT[o.pp] && o.roster!==o.pp);
     o.noOut = o.present && (o.tout==null || /tidak (ter|absen)/i.test(o.outStat));
+    const rIn = String(r['ABSEN IN']||''), rOut = String(r['ABSEN OUT']||'');
+    o.radKnown = o.present && /radius/i.test(rIn+' '+rOut);
+    o.outRad = o.radKnown && /out radius/i.test(rIn+' '+rOut);
+    o._inOut = o.radKnown && /out radius/i.test(rIn); o._outOut = o.radKnown && /out radius/i.test(rOut);
     // durasi
     if(o.present && o.tin!=null && o.tout!=null){
       let dur = o.tout - o.tin; if(dur<0) dur += 1440;
@@ -440,7 +473,7 @@ function prepare(raw){
 /* ================= AGGREGATION ================= */
 function agg(rows, tol){
   const a = {n:rows.length, people:new Set(), sched:0, present:0, off:0, offWork:0, abs:{}, cmp:0, late:0, lateMin:0, early:0,
-             mismatch:0, durN:0, durSum:0, otSum:0, otDays:0, otDays1h:0, noOut:0,
+             mismatch:0, durN:0, durSum:0, otSum:0, otDays:0, otDays1h:0, noOut:0, long12:0, long16:0, radN:0, outRad:0,
              schJ:{OT:0,INS:0,TANPA:0,BELUM:0}, schD:{OT:0,INS:0,TANPA:0,BELUM:0}, viOTh:0, viOTd:0, insD:0};
   ABS_KEYS.forEach(k=>a.abs[k]=0);
   rows.forEach(r=>{
@@ -450,6 +483,9 @@ function agg(rows, tol){
     if(r.present) a.present++; else a.abs[r.status]=(a.abs[r.status]||0)+1;
     if(r.mismatch) a.mismatch++;
     if(r.noOut) a.noOut++;
+    if(r.dur!=null && r.dur>CONFIG.LONG_H*60) a.long12++;
+    if(r.dur!=null && r.dur>16*60) a.long16++;
+    if(r.radKnown){ a.radN++; if(r.outRad) a.outRad++; }
     if(r.gap!=null){ a.cmp++; if(r.gap>tol){ a.late++; a.lateMin+=r.gap; } }
     if(r.dur!=null){ a.durN++; a.durSum+=r.dur; }
     if(r.ot!=null){ a.otSum+=r.ot; if(r.ot>0) a.otDays++; if(r.ot>=60) a.otDays1h++; }
@@ -570,6 +606,8 @@ function render(){
     tile('Kehadiran', att==null?'–':fmt(att,1)+'%', `${fmt(A.sched-A.present)} hari tidak hadir dari ${fmt(A.sched)} hari terjadwal`, att, attB, false) +
     tile('Telat masuk', late==null?'–':fmt(late,1)+'%', `${fmt(A.late)} kali · rata-rata ${A.late?fmt(A.lateMin/A.late,0):'–'} menit`, late, lateB, true) +
     tile('Tidak absen pulang', noOut==null?'–':fmt(noOut,1)+'%', `${fmt(A.noOut)} kali dari ${fmt(A.present)} hari hadir`, noOut, noOutB, true) +
+    tile('Kerja > 12 jam sehari ⚠', rate(A.long12,A.durN)==null?'–':fmt(rate(A.long12,A.durN),1)+'%', `${fmt(A.long12)} hari kerja · ${fmt(A.long16)} di antaranya > 16 jam`, rate(A.long12,A.durN), B&&rate(B.long12,B.durN), true) +
+    tile('Absen di luar radius', rate(A.outRad,A.radN)==null?'–':fmt(rate(A.outRad,A.radN),1)+'%', `${fmt(A.outRad)} hari hadir absen masuk/pulang di luar radius`, rate(A.outRad,A.radN), B&&rate(B.outRad,B.radN), true) +
     (C ? tile('Lewat shift tanpa OT / insentif'+(win.own?'':` <span style="font-weight:500">· ${dLbl(win.f)}–${dLbl(win.t)}</span>`), fmt(tanpa,0)+'<small>jam</small>',
           `${fmt(C.schD.TANPA)} hari kerja · ${pct(C.schJ.TANPA,C.otSum,0)} dari jam lewat shift${win.own? (covTo<to?` · s/d ${dLbl(covTo)}`:'') : ' · periode terakhir yang data OT/insentif-nya lengkap'}`,
           rate(C.schJ.TANPA, C.otSum), prevCov&&prevCov.otSum ? rate(prevCov.schJ.TANPA, prevCov.otSum) : null, true)
@@ -608,6 +646,18 @@ function render(){
   legendHtml('lgNoOutW', [...sites.map(s=>[colorSite(s),s]), ['#64748b','Rata-rata',true]]);
   const noN = r=>r.noOut?1:0;
   mkChart('cNoOutW',{type:'line',data:{labels:wkL,datasets:wLine(weekly(pres,r=>r.site,noN,()=>1), weekly(pres,()=>'_',noN,()=>1))},options:lineOpts('%',{beginAtZero:true})});
+  // radius
+  const radRows = pres.filter(r=>r.radKnown), radN = r=>r.outRad?1:0;
+  legendHtml('lgRadW', [...sites.map(s=>[colorSite(s),s]), ['#64748b','Rata-rata',true]]);
+  mkChart('cRadW',{type:'line',data:{labels:wkL,datasets:wLine(weekly(radRows,r=>r.site,radN,()=>1), weekly(radRows,()=>'_',radN,()=>1))},options:lineOpts('%',{beginAtZero:true})});
+  const radIO = s => { const rr = radRows.filter(r=>r.site===s); const raw = rr.length||1;
+    return [rr.filter(r=>r._inOut).length/raw*100, rr.filter(r=>r._outOut).length/raw*100]; };
+  legendHtml('lgRadSite', [[SERIES[0],'Absen masuk di luar radius'],[SERIES[1],'Absen pulang di luar radius']]);
+  mkChart('cRadSite',{type:'bar',data:{labels:sites,datasets:[0,1].map(i=>({label:i?'Pulang':'Masuk',data:sites.map(s=>+radIO(s)[i].toFixed(1)),
+      backgroundColor:SERIES[i],borderRadius:{topLeft:4,topRight:4},borderSkipped:'bottom',maxBarThickness:36}))},
+    options:{maintainAspectRatio:false,datasets:{bar:{categoryPercentage:.6,barPercentage:.9}},
+      plugins:{legend:{display:false},tooltip:{...tipBase,callbacks:{label:c=>` ${c.dataset.label} di luar radius: ${fmt(c.parsed.y,1)}%`}}},
+      scales:{x:{grid:{display:false},border:{color:AXIS}},y:{beginAtZero:true,grid:{color:GRID},border:{display:false},ticks:{callback:v=>v+'%'}}}}});
   const bdef = [['≤−31',-1e9,-30],['−30…−16',-30,-15],['−15…0',-15,0],['1…15',0,15],['16…30',15,30],['31…60',30,60],['61…120',60,1e9]];
   const gaps = rows.filter(r=>r.gap!=null).map(r=>r.gap);
   mkChart('cLate',{type:'bar',data:{labels:bdef.map(b=>b[0]),datasets:[{label:'Hari',data:bdef.map(([l,lo,hi])=>gaps.filter(g=>g>lo&&g<=hi).length),
@@ -622,6 +672,16 @@ function render(){
     k2('Rata-rata durasi kerja', hhmm(A.durN?A.durSum/A.durN:null), `dari ${fmt(A.durN)} hari dengan jam masuk & pulang`);
 
   /* ---- 3 · BEBAN KERJA ---- */
+  const durRows = pres.filter(r=>r.dur!=null), lN = r=>r.dur>CONFIG.LONG_H*60?1:0;
+  legendHtml('lgLongW', [...sites.map(s=>[colorSite(s),s]), ['#64748b','Rata-rata',true]]);
+  mkChart('cLongW',{type:'line',data:{labels:wkL,datasets:wLine(weekly(durRows,r=>r.site,lN,()=>1), weekly(durRows,()=>'_',lN,()=>1))},options:lineOpts('%',{beginAtZero:true})});
+  const dB = [['< 8 j',0,8],['8–10 j',8,10],['10–12 j',10,12],['12–14 j',12,14],['14–16 j',14,16],['> 16 j',16,99]];
+  const dh = dB.map(([l,lo,hi])=>durRows.filter(r=>r.dur/60>=lo&&r.dur/60<hi).length);
+  mkChart('cDurHist',{type:'bar',data:{labels:dB.map(b=>b[0]),datasets:[{label:'Hari kerja',data:dh,
+      backgroundColor:dB.map(b=>b[1]>=12?SERIES[1]:SERIES[0]),borderRadius:{topLeft:4,topRight:4},borderSkipped:'bottom',maxBarThickness:52}]},
+    options:{maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{...tipBase,callbacks:{label:c=>` ${fmt(c.parsed.y)} hari (${pct(c.parsed.y,durRows.length)})`}}},
+      scales:{x:{grid:{display:false},border:{color:AXIS}},y:{grid:{color:GRID},border:{display:false},ticks:{callback:v=>fmt(v)}}}}});
+
   $('viNote').innerHTML = !VI ? 'Data Variable Income belum tersedia — jam lewat shift belum bisa dipecah menurut skema.'
     : (viCover < to ? `Data OT approved tersedia s/d <b>${dLbl(VI.otUntil)}</b> dan insentif s/d <b>${dLbl(VI.insUntil)}</b> (update Variable Income ${VI.label}). Jam lewat shift setelah ${dLbl(viCover)} belum bisa dipecah menurut skema sampai data Variable Income diperbarui${viCover<from?` — pilih periode s/d ${dLbl(viCover)} untuk melihat pecahannya`:''}.`
                     : `Data OT approved &amp; insentif dari Variable Income (update ${VI.label}) mencakup seluruh periode ini.`);
@@ -706,6 +766,30 @@ function renderPains(){
       text:`Kehadiran keseluruhan <b>${pct(A.present,A.sched)}</b>. Terendah di <b>${w[0]}</b> (${fmt(w[1],1)}%), terutama karena <b>${ABS_LBL[cause[0]].toLowerCase()}</b> (${pct(cause[1],a.sched-a.present,0)} dari ketidakhadiran di site itu). ${fmt(n)} orang kehadirannya di bawah 90%.`,
       foot: trend(rate(A.present,A.sched), B&&rate(B.present,B.sched), false) + go('att',w[0],'Lihat daftar '+w[0])});
   }
+  // jam kerja > 12 jam (keselamatan)
+  if(A.long12>0){
+    const w = worst(a=>rate(a.long12,a.durN)); const n5 = P.filter(p=>p.long12>=5).length;
+    const big = sites.map(s=>[s,SA[s].long12]).sort((a,b)=>b[1]-a[1])[0];
+    const whereL = big[0]===w[0] ? `Tertinggi di <b>${w[0]}</b> (${fmt(w[1],1)}%, ${pct(big[1],A.long12,0)} dari seluruh kasus).`
+      : `Persentase tertinggi di <b>${w[0]}</b> (${fmt(w[1],1)}%); jumlah terbanyak di <b>${big[0]}</b> (${pct(big[1],A.long12,0)} dari seluruh kasus).`;
+    const wD = worse(rate(A.long12,A.durN), B&&rate(B.long12,B.durN), true);
+    out.push({sev:2.6+wD, cls:clsOf(wD)||'', title:'Kerja lebih dari 12 jam sehari',
+      text:`<b>${fmt(A.long12)} hari kerja</b> (${pct(A.long12,A.durN)}) lebih dari 12 jam dari absen masuk sampai pulang, ${fmt(A.long16)} di antaranya > 16 jam — risiko kelelahan saat mengemudi. ${whereL} ${fmt(n5)} orang ≥ 5 kali.`,
+      foot: trend(rate(A.long12,A.durN), B&&rate(B.long12,B.durN), true) + go('long',big[0],'Lihat daftar '+big[0])});
+  }
+  // absen luar radius (validitas absensi)
+  if(A.outRad>0){
+    const bys = sites.map(s=>[s,rate(SA[s].outRad,SA[s].radN)]).filter(x=>x[1]!=null).sort((a,b)=>b[1]-a[1]);
+    const others = bys.slice(1).map(x=>`${x[0]} ${fmt(x[1],1)}%`).join(', ');
+    const n50 = P.filter(p=>p.radN>=5 && p.outRadPct>=50).length;
+    const bigR = sites.map(s=>[s,SA[s].outRad]).sort((a,b)=>b[1]-a[1])[0];
+    const kls = sites.includes('Jakarta (KLS)') && rate(SA['Jakarta (KLS)'].outRad,SA['Jakarta (KLS)'].radN)>=50
+      ? ` Untuk Jakarta (KLS), kemungkinan titik radius absen masih terdaftar di lokasi lama — cek setting lokasi di PeoplePro.` : '';
+    const wR = worse(rate(A.outRad,A.radN), B&&rate(B.outRad,B.radN), true);
+    out.push({sev:2.4+wR, cls:clsOf(wR)||'', title:'Absen di luar radius',
+      text:`<b>${pct(A.outRad,A.radN)}</b> hari hadir absen masuk/pulang di luar radius lokasi. Per site: <b>${bys[0][0]}</b> ${fmt(bys[0][1],1)}%${others?`, ${others}`:''} — jumlah terbanyak di <b>${bigR[0]}</b> (${pct(bigR[1],A.outRad,0)} kasus).${kls} ${fmt(n50)} orang absen di luar radius pada ≥ 50% harinya. <i>Perlu dikonfirmasi apakah absen di lokasi pengiriman memang diizinkan.</i>`,
+      foot: trend(rate(A.outRad,A.radN), B&&rate(B.outRad,B.radN), true) + go('rad',bigR[0],'Lihat daftar '+bigR[0])});
+  }
   // 4. telat
   if(A.late>0){
     const w = worst(a=>rate(a.late,a.cmp)); const n3 = P.filter(p=>p.late>=3).length;
@@ -734,7 +818,7 @@ function rel(v, ref, higherBad, d=1, unit='%', tolAbs){
 }
 function renderSiteTable(){
   const {A,SA,sites} = CUR;
-  const R = {att:rate(A.present,A.sched), late:rate(A.late,A.cmp), noOut:rate(A.noOut,A.present), tanpa:A.otSum?rate(A.schJ.TANPA,A.otSum):null};
+  const R = {att:rate(A.present,A.sched), late:rate(A.late,A.cmp), noOut:rate(A.noOut,A.present), tanpa:A.otSum?rate(A.schJ.TANPA,A.otSum):null, long:rate(A.long12,A.durN), rad:rate(A.outRad,A.radN)};
   const line = (lbl,a,isTot)=>{ const ref = isTot?null:R;
     return `<tr><td>${lbl}</td><td class="num">${fmt(a.people.size)}</td>
     <td class="num">${rel(rate(a.present,a.sched), ref&&ref.att, false, 1, '%', 2)}</td><td class="num">${fmt(a.sched-a.present)}</td>
@@ -743,8 +827,10 @@ function renderSiteTable(){
     <td class="num">${hhmm(a.durN?a.durSum/a.durN:null)}</td>
     <td class="num">${fmt(a.otSum/60,0)}</td>
     ${VI?(CUR.win&&CUR.win.own?`<td class="num">${fmt(a.schJ.OT/60,0)}</td><td class="num">${fmt(a.schJ.INS/60,0)}</td><td class="num">${fmt(a.schJ.TANPA/60,0)}</td>`:'<td class="num">–</td><td class="num">–</td><td class="num">–</td>'):''}
+    <td class="num">${rel(rate(a.long12,a.durN), ref&&ref.long, true)}</td>
+    <td class="num">${rel(rate(a.outRad,a.radN), ref&&ref.rad, true)}</td>
     <td class="num">${fmt(a.offWork)}</td></tr>`; };
-  $('tSite').innerHTML = `<thead><tr><th>Site</th><th>Personel</th><th>Kehadiran</th><th>Hari tidak hadir</th><th>Telat</th><th>Tidak absen pulang</th><th>Rata-rata durasi</th><th>Lewat shift (jam)</th>${VI?'<th>· OT approved</th><th>· Insentif</th><th>· Tanpa OT/insentif</th>':''}<th>Masuk saat OFF</th></tr></thead>
+  $('tSite').innerHTML = `<thead><tr><th>Site</th><th>Personel</th><th>Kehadiran</th><th>Hari tidak hadir</th><th>Telat</th><th>Tidak absen pulang</th><th>Rata-rata durasi</th><th>Lewat shift (jam)</th>${VI?'<th>· OT approved</th><th>· Insentif</th><th>· Tanpa OT/insentif</th>':''}<th>Kerja &gt; 12 jam</th><th>Luar radius</th><th>Masuk saat OFF</th></tr></thead>
     <tbody>${sites.map(s=>line(s,SA[s])).join('')}</tbody><tfoot>${line('Total',A,true)}</tfoot>`;
 }
 
@@ -756,6 +842,8 @@ const CHIPS = [
   ['noout','Tidak absen pulang ≥ 3x', p=>p.noOut>=3, 'noOut', false],
   ['late','Telat ≥ 3x', p=>p.late>=3, 'late', false],
   ['att','Kehadiran < 90%', p=>p.att!=null&&p.att<90, 'att', true],
+  ['long','Kerja > 12 jam ≥ 5x', p=>p.long12>=5, 'long12', false],
+  ['rad','Luar radius ≥ 50% hari', p=>p.radN>=5 && p.outRadPct>=50, 'outRadPct', false],
   ['off','Masuk saat OFF', p=>p.offWork>0, 'offWork', false],
 ];
 function renderChips(){
@@ -776,6 +864,8 @@ const PCOLS = [
   ['ot','Lewat shift (jam)',null,p=>fmt(p.ot/60,1)],
   ['tanpaJ','Tanpa OT/insentif (jam)',null,p=>p.tanpaJ?`${fmt(p.tanpaJ/60,1)}<div style="font-size:11px;color:var(--muted)">${p.tanpaD} hari</div>`:'0'],
   ['viOTh','OT approved (jam)',null,p=>fmt(p.viOTh,1)],['insD','Hari insentif'],
+  ['long12','Kerja > 12 jam (hari)',null,p=>p.long12?`${p.long12}<div style="font-size:11px;color:var(--muted)">maks ${hhmm(p.maxDur)}</div>`:'0'],
+  ['outRadPct','Luar radius',null,p=>p.outRadPct==null?'–':`${fmt(p.outRadPct,0)}%<div style="font-size:11px;color:var(--muted)">${p.outRad} dari ${p.radN} hari</div>`],
   ['offWork','Masuk saat OFF'],
 ];
 function renderPersonTable(){
@@ -792,10 +882,10 @@ function renderPersonTable(){
   $('tPerson').querySelectorAll('th').forEach(th=>th.onclick=()=>{ const k=th.dataset.k; if(key===k) {sortKey=k; sortAsc=!asc;} else {sortKey=k; sortAsc=['nama','site','job','att'].includes(k);} renderPersonTable(); });
 }
 function downloadCsv(){
-  const head=['NIK','Nama','Site','Facility','Jobdesk','Hari terjadwal','Hadir','Kehadiran %','Sakit','Cuti','Izin/Mangkir','Telat (kali)','% Telat','Rata-rata telat (mnt)','Tidak absen pulang','Jadwal beda PeoplePro','Rata-rata durasi (jam)','Lewat shift (jam)','Hari lewat shift','OT approved (jam)','Hari insentif','Tanpa OT/insentif (jam)','Hari tanpa OT/insentif','Masuk saat OFF'];
+  const head=['NIK','Nama','Site','Facility','Jobdesk','Hari terjadwal','Hadir','Kehadiran %','Sakit','Cuti','Izin/Mangkir','Telat (kali)','% Telat','Rata-rata telat (mnt)','Tidak absen pulang','Jadwal beda PeoplePro','Rata-rata durasi (jam)','Lewat shift (jam)','Hari lewat shift','OT approved (jam)','Hari insentif','Tanpa OT/insentif (jam)','Hari tanpa OT/insentif','Kerja > 12 jam (hari)','Durasi terlama (jam)','Luar radius (hari)','Luar radius %','Masuk saat OFF'];
   const r1=v=>v==null?'':Math.round(v*10)/10;
   const list = PERSON.filter(p=>(!TBL.site||p.site===TBL.site) && (CHIPS.find(c=>c[0]===TBL.chip)||CHIPS[0])[2](p));
-  const lines=list.map(p=>[p.nik,p.nama,p.site,p.fac,p.job,p.sched,p.present,r1(p.att),p.sakit,p.cuti,p.alpa,p.late,r1(p.latePct),r1(p.lateAvg),p.noOut,p.mismatch,r1(p.dur/60),r1(p.ot/60),p.otDays,r1(p.viOTh),p.insD,r1(p.tanpaJ/60),p.tanpaD,p.offWork]);
+  const lines=list.map(p=>[p.nik,p.nama,p.site,p.fac,p.job,p.sched,p.present,r1(p.att),p.sakit,p.cuti,p.alpa,p.late,r1(p.latePct),r1(p.lateAvg),p.noOut,p.mismatch,r1(p.dur/60),r1(p.ot/60),p.otDays,r1(p.viOTh),p.insD,r1(p.tanpaJ/60),p.tanpaD,p.long12,r1(p.maxDur/60),p.outRad,r1(p.outRadPct),p.offWork]);
   const csv=[head,...lines].map(r=>r.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(',')).join('\n');
   const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob(['﻿'+csv],{type:'text/csv'}));
   a.download=`tindak_lanjut_${TBL.chip}${TBL.site?'_'+TBL.site.replace(/\W+/g,''):''}_${$('fFrom').value}_${$('fTo').value}.csv`; a.click();
@@ -811,11 +901,13 @@ function badge(a,b,[t1,t2],higherBad){
 function people(rows,tol){
   const m={};
   rows.forEach(r=>{
-    const p=m[r.nik]||(m[r.nik]={nik:r.nik,nama:r.nama,site:r.site,fac:r.fac,job:r.job,sched:0,present:0,sakit:0,cuti:0,alpa:0,cmp:0,late:0,lateMin:0,mismatch:0,durN:0,durSum:0,ot:0,otDays:0,noOut:0,offWork:0,schJ:{OT:0,INS:0,TANPA:0,BELUM:0},viOTh:0,insD:0,tanpaD:0});
+    const p=m[r.nik]||(m[r.nik]={nik:r.nik,nama:r.nama,site:r.site,fac:r.fac,job:r.job,sched:0,present:0,sakit:0,cuti:0,alpa:0,cmp:0,late:0,lateMin:0,mismatch:0,durN:0,durSum:0,ot:0,otDays:0,noOut:0,offWork:0,schJ:{OT:0,INS:0,TANPA:0,BELUM:0},viOTh:0,insD:0,tanpaD:0,long12:0,maxDur:0,radN:0,outRad:0});
     if(r.status==='OFF'){ if(r.offWork) p.offWork++; return; }
     p.sched++; if(r.present) p.present++;
     if(r.status==='SAKIT') p.sakit++; else if(r.status==='CUTI') p.cuti++; else if(!r.present) p.alpa++;
     if(r.mismatch) p.mismatch++; if(r.noOut) p.noOut++;
+    if(r.dur!=null){ if(r.dur>CONFIG.LONG_H*60) p.long12++; if(r.dur>p.maxDur) p.maxDur=r.dur; }
+    if(r.radKnown){ p.radN++; if(r.outRad) p.outRad++; }
     if(r.gap!=null){ p.cmp++; if(r.gap>tol){p.late++; p.lateMin+=r.gap;} }
     if(r.dur!=null){ p.durN++; p.durSum+=r.dur; }
     if(r.ot!=null){ p.ot+=r.ot; if(r.ot>0) p.otDays++; }
@@ -823,7 +915,7 @@ function people(rows,tol){
     if(r.viOT>0) p.viOTh+=r.viOT; if(r.viIns) p.insD++;
   });
   return Object.values(m).map(p=>({...p, att:p.sched?p.present/p.sched*100:null, latePct:p.cmp?p.late/p.cmp*100:null,
-    lateAvg:p.late?p.lateMin/p.late:null, dur:p.durN?p.durSum/p.durN:null, tanpaJ:p.schJ.TANPA, absent:p.sched-p.present}));
+    lateAvg:p.late?p.lateMin/p.late:null, dur:p.durN?p.durSum/p.durN:null, tanpaJ:p.schJ.TANPA, absent:p.sched-p.present, outRadPct:p.radN?p.outRad/p.radN*100:null}));
 }
 
 /* ================= LOAD ================= */
