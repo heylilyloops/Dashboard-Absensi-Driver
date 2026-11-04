@@ -101,6 +101,11 @@ def fix_layout(df, title):
     split = m[0].notna() & (df["ROSTER PEOPLEPRO"].str.strip() == "")
     df.loc[split, "ROSTER PEOPLEPRO"] = df.loc[split, "ROSTER"].str.strip()
     df.loc[split, "ROSTER"] = m.loc[split, 0]
+    # hari berstatus Mutasi = orang sudah pindah site -> bukan hari kerja di site ini
+    mut = df["ROSTER"].str.strip().str.upper().eq("MUTASI") | df["DESCRIPTION"].str.strip().str.upper().eq("MUTASI")
+    if mut.any():
+        print(f"  {title}: {int(mut.sum())} baris Mutasi dikeluarkan")
+        df = df[~mut].copy()
     # FACILITY hanya BU ('HCI') -> tambah lokasi dari nama tab ('HCI TALLO')
     city = title.split()[-1].upper()
     one = df["FACILITY"].str.strip().str.match(r"^\S+$")
