@@ -24,4 +24,4 @@ Alur: Sheets → GitHub Actions (setiap hari 07.00 WIB) → `data/*.csv` → `in
 Kalau nama repo berbeda, ubah `BASE_URL` di bagian CONFIG `index.html`.
 
 ## Menambah site baru
-Tambahkan baris di `SHEETS` pada `scripts/update_csv.py` dan nama file di `CONFIG.FILES` pada `index.html`.
+Tambahkan baris di `SHEETS` pada `scripts/update_csv.py`, nama file di `CONFIG.FILES` dan label di `SITE_LABEL` pada `index.html`. Tab dengan format berbeda (ROSTER berisi jam, FACILITY tanpa lokasi, DESCRIPTION kosong) dirapikan otomatis oleh `fix_layout()`.

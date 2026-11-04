@@ -166,7 +166,7 @@ details.more>.inner{margin-top:8px}
 <header>
   <div>
     <h1>Monitoring Absensi &amp; Kehadiran Driver</h1>
-    <div class="sub">Driver &amp; Asst Driver · Jababeka · Cikupa · Sidoarjo · Jakarta (KLS)</div>
+    <div class="sub">Driver &amp; Asst Driver · NDC Jababeka · Cikupa · Sidoarjo · Jakarta (KLS) · RDC Tallo</div>
   </div>
   <div class="hdr-r">
     <a class="vi-link" href="https://rahmatpambudi-dot.github.io/variable-income/dashboard_variable_income.html" target="_blank" rel="noopener">Biaya OT &amp; insentif → Variable Income</a>
@@ -366,7 +366,7 @@ details.more>.inner{margin-top:8px}
 /* ================= CONFIG ================= */
 const CONFIG = {
   BASE_URL: 'https://raw.githubusercontent.com/heylilyloops/Dashboard-Absensi-Driver/main/data/',
-  FILES: ['NDC_JABABEKA.csv','NDC_CIKUPA.csv','NDC_SIDOARJO.csv'],
+  FILES: ['NDC_JABABEKA.csv','NDC_CIKUPA.csv','NDC_SIDOARJO.csv','RDC_TALLO.csv'],
   MAX_LATE_MIN: 120,        // masuk > 120 mnt setelah mulai shift = kemungkinan shift lain, tidak dihitung
   MAX_EARLY_MIN: 240,       // masuk > 240 mnt sebelum mulai shift = kemungkinan shift lain, tidak dihitung
   OT_MIN: 30,               // kelebihan jam < 30 mnt setelah akhir shift tidak dihitung lewat shift
@@ -426,7 +426,7 @@ const ABS_LBL  = {SAKIT:'Sakit',CUTI:'Cuti',IZIN:'Izin (termasuk izin khusus)',A
 
 /* ================= DATA PREP ================= */
 let ROWS = [], SHIFT = {}, VI = null;   // VI = {day:Map, site:Map, cover, otUntil, insUntil, label}
-const SITE_LABEL = {'NDC Jababeka':'Jababeka','NDC Cikupa':'Cikupa','NDC Sidoarjo':'Sidoarjo'};
+const SITE_LABEL = {'NDC Jababeka':'Jababeka','NDC Cikupa':'Cikupa','NDC Sidoarjo':'Sidoarjo','RDC Tallo':'Tallo'};
 const nikN = n => { n=String(n||'').trim(); return /^\d+$/.test(n) ? String(parseInt(n,10)) : n.toUpperCase(); };
 const SCHEMES = ['OT','INS','TANPA','BELUM'];
 const SCH_LBL = {OT:'OT approved',INS:'Insentif',TANPA:'Tanpa OT/insentif',BELUM:'Belum tercatat (data OT/insentif belum update)'};
@@ -443,10 +443,13 @@ function prepareVI(daily, pers, info){
 
 function prepare(raw){
   // 1) peta kode shift -> jam, dari semua teks PeoplePro
-  SHIFT = {};
+  // jam shift dicatat per site dulu (kode sama bisa beda jam antar site), lalu global sebagai cadangan
+  SHIFT = {}; const SHIFT_S = {};
   raw.forEach(r=>{
     const m = String(r['ROSTER PEOPLEPRO']||'').match(shiftRe);
-    if(m && !['SHOFF','UNSET'].includes(m[1].toUpperCase()) && !SHIFT[m[1]]) SHIFT[m[1]] = {s:toMin(m[2]), e:toMin(m[3])};
+    if(!m || ['SHOFF','UNSET'].includes(m[1].toUpperCase())) return;
+    const v = {s:toMin(m[2]), e:toMin(m[3])}, k = (r['SITE']||'')+'|'+m[1];
+    if(!SHIFT_S[k]) SHIFT_S[k] = v; if(!SHIFT[m[1]]) SHIFT[m[1]] = v;
   });
   // 2) enrich per baris
   ROWS = raw.filter(r=>r['NIK']).map(r=>{
@@ -461,9 +464,10 @@ function prepare(raw){
     o.offWork = o.status==='OFF' && o.tin!=null;
     // kode roster berbentuk shift (huruf+angka / angka) tapi jamnya tidak diketahui -> jangan pakai jam PeoplePro
     const looksShift = /^([A-Z]\d{3,4}|\d{2,4})$/i.test(o.roster);
-    const code = SHIFT[o.roster] ? o.roster : (!looksShift && SHIFT[o.pp] ? o.pp : null);
-    o.shift = code;
-    o.mismatch = !!(SHIFT[o.roster] && SHIFT[o.pp] && o.roster!==o.pp);
+    const shf = c => c ? (SHIFT_S[(r['SITE']||'')+'|'+c] || SHIFT[c]) : null;
+    const code = shf(o.roster) ? o.roster : (!looksShift && shf(o.pp) ? o.pp : null);
+    o.shift = code; o.shiftT = shf(code);
+    o.mismatch = !!(shf(o.roster) && shf(o.pp) && o.roster!==o.pp);
     o.noOut = o.present && (o.tout==null || /tidak (ter|absen)/i.test(o.outStat));
     const rIn = String(r['ABSEN IN']||''), rOut = String(r['ABSEN OUT']||'');
     o.radKnown = o.present && /radius/i.test(rIn+' '+rOut);
@@ -476,7 +480,7 @@ function prepare(raw){
     }
     // kepatuhan & OT
     if(o.present && code && o.tin!=null){
-      const sh = SHIFT[code];
+      const sh = o.shiftT;
       let gap = o.tin - sh.s; if(gap>720) gap-=1440; if(gap<-720) gap+=1440;
       if(gap <= CONFIG.MAX_LATE_MIN && gap >= -CONFIG.MAX_EARLY_MIN){
         o.gap = gap;
@@ -1027,7 +1031,8 @@ async function load(){
     const bust='?t='+Date.now();
     const [meta,...txts] = await Promise.all([
       fetch(CONFIG.BASE_URL+'meta.json'+bust).then(r=>r.ok?r.json():null).catch(()=>null),
-      ...CONFIG.FILES.map(f=>fetch(CONFIG.BASE_URL+f+bust).then(r=>{ if(!r.ok) throw new Error(f+' ('+r.status+')'); return r.text(); }))
+      // file site yang belum ada (mis. baru ditambah, belum tersync) dilewati, tidak menggagalkan dashboard
+      ...CONFIG.FILES.map(f=>fetch(CONFIG.BASE_URL+f+bust).then(r=>r.ok?r.text():'').catch(()=>''))
     ]);
     const raw = txts.flatMap(parseText);
     const vi = meta && meta.variable_income && meta.variable_income.status==='ok' ? meta.variable_income : null;

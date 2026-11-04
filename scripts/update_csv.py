@@ -25,7 +25,19 @@ SHEETS = {
     "NDC Jababeka": "NDC_JABABEKA.csv",
     "NDC Cikupa": "NDC_CIKUPA.csv",
     "NDC Sidoarjo": "NDC_SIDOARJO.csv",
+    "RDC Tallo": "RDC_TALLO.csv",
 }
+
+# Kode ROSTER -> DESCRIPTION, dipakai kalau kolom DESCRIPTION kosong (mis. tab RDC Tallo)
+ROSTER_STATUS = {
+    "O": "OFF", "OFF": "OFF", "SHOFF": "OFF",
+    "AL": "Cuti Tahunan", "CT": "Cuti Tahunan", "CM": "Cuti Menikah", "CB": "Cuti Bersalin",
+    "SD": "Sakit dengan Surat Dokter", "S": "Sakit tanpa Surat Dokter", "SK": "Sakit tanpa Surat Dokter",
+    "I": "Ijin 1 Hari (Pribadi)", "IJ": "Ijin 1 Hari (Pribadi)", "IZ": "Ijin 1 Hari (Pribadi)",
+    "M": "Mangkir", "MK": "Mangkir", "A": "Mangkir", "ALPA": "Mangkir",
+    "LK": "Dinas/Tgs Luar Kota (Perdin)", "DL": "Dinas/Tgs Luar Kota (Perdin)", "DK": "Dinas/Tgs Dalam Kota",
+}
+SHIFT_RE = re.compile(r"^\s*(\S+)\s+(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})")
 
 COLUMNS = [
     "NIK", "NAMA", "JOBDESK", "FACILITY", "ABSEN_DATE", "ROSTER", "FINGER_TIME",
@@ -52,6 +64,11 @@ def norm_date(v):
         if mo > 12:  # jaga-jaga kalau ternyata D/M/YYYY
             mo, d = d, mo
         return dt.date(y, mo, d).isoformat()
+    for fmt in ("%d %b %Y", "%d %B %Y", "%d-%b-%Y"):  # format tab Tallo: '01 Oct 2026'
+        try:
+            return dt.datetime.strptime(s, fmt).date().isoformat()
+        except ValueError:
+            pass
     return s
 
 
@@ -62,11 +79,44 @@ def norm_time(v):
         secs = round((float(v) % 1) * 86400)
         return f"{secs // 3600:02d}:{secs % 3600 // 60:02d}:{secs % 60:02d}"
     s = str(v).strip()
-    m = re.match(r"^(\d{1,2}):(\d{2})(?::(\d{2}))?", s)
+    m = re.match(r"^(\d{1,2}):(\d{2})(?::(\d{2}))?\s*([AaPp][Mm])?", s)
     if m:
-        h, mi, se = m.group(1), m.group(2), m.group(3) or "00"
-        return f"{int(h):02d}:{mi}:{se}"
+        h, mi, se, ap = int(m.group(1)), m.group(2), m.group(3) or "00", (m.group(4) or "").upper()
+        if ap == "PM" and h < 12:
+            h += 12
+        elif ap == "AM" and h == 12:
+            h = 0
+        return f"{h:02d}:{mi}:{se}"
     return s
+
+
+def fix_layout(df, title):
+    """Samakan tab yang formatnya beda (mis. RDC Tallo) dengan format NDC."""
+    for c in COLUMNS:
+        if c not in df.columns:
+            df[c] = ""
+    df[COLUMNS] = df[COLUMNS].fillna("").astype(str).replace({"nan": "", "None": ""})
+    # ROSTER berisi 'M0047 08:50 - 16:30' & ROSTER PEOPLEPRO kosong -> pecah jadi kode + teks PeoplePro
+    m = df["ROSTER"].str.extract(SHIFT_RE)
+    split = m[0].notna() & (df["ROSTER PEOPLEPRO"].str.strip() == "")
+    df.loc[split, "ROSTER PEOPLEPRO"] = df.loc[split, "ROSTER"].str.strip()
+    df.loc[split, "ROSTER"] = m.loc[split, 0]
+    # FACILITY hanya BU ('HCI') -> tambah lokasi dari nama tab ('HCI TALLO')
+    city = title.split()[-1].upper()
+    one = df["FACILITY"].str.strip().str.match(r"^\S+$")
+    df.loc[one, "FACILITY"] = df.loc[one, "FACILITY"].str.strip().str.upper() + " " + city
+    # DESCRIPTION kosong -> dari kode roster, atau 'Hadir' kalau ada jam absen
+    empty = df["DESCRIPTION"].str.strip() == ""
+    code = df["ROSTER"].str.strip().str.upper()
+    has_time = (df["TIME ABSEN IN"].str.strip() != "") | (df["TIME ABSEN OUT"].str.strip() != "")
+    from_code = code.map(ROSTER_STATUS)
+    desc = from_code.where(from_code.notna(), "")
+    desc = desc.where(~((desc == "") & has_time), "Hadir")
+    df.loc[empty, "DESCRIPTION"] = desc[empty]
+    left = df.loc[empty & (df["DESCRIPTION"] == ""), "ROSTER"].value_counts().head(15)
+    if len(left):
+        print(f"  {title}: kode roster tanpa status & tanpa jam (jadi 'tanpa keterangan'): {left.to_dict()}")
+    return df
 
 
 def norm_jobdesk(v):
@@ -105,6 +155,7 @@ def main():
         for c in ["FINGER_TIME", "TIME ABSEN IN", "TIME ABSEN OUT"]:
             df[c] = df[c].map(norm_time)
         df["JOBDESK"] = df["JOBDESK"].map(norm_jobdesk)
+        df = fix_layout(df, title)
         df["NIK"] = df["NIK"].astype(str).str.strip()
         df.insert(0, "SITE", title)
 
