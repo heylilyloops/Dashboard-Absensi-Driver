@@ -31,4 +31,7 @@ jobs:
           git config user.email "actions@github.com"
           git add data/
           git diff --staged --quiet || git commit -m "Auto-update absensi $(date +'%Y-%m-%d')"
-          git push
+          for i in 1 2 3; do
+            git pull --rebase origin main && git push && break
+            echo "Push gagal, coba lagi ($i)"; sleep 15
+          done
