@@ -411,7 +411,7 @@ function classify(r){
   // hadir, termasuk yang ditandai telat / lupa absen oleh PeoplePro
   if(/^hadir|late present|terlambat|wfh|holiday overtime|absen masuk tidak terdeteksi/.test(d)) return 'HADIR';
   if(/tidak absen datang/.test(d)) return hasTime ? 'HADIR' : 'LAINNYA';
-  if(/dinas|tgs luar|tugas luar|tgs dalam/.test(d)) return 'DINAS';
+  if(/dinas|tgs luar|tugas luar|tgs dalam|perdin|support|pameran|penugasan/.test(d)) return 'DINAS';
   if(/^off\b/.test(d)) return 'OFF';
   if(/sakit/.test(d)) return 'SAKIT';
   if(/cuti/.test(d)) return 'CUTI';
