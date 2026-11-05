@@ -37,6 +37,18 @@ ROSTER_STATUS = {
     "M": "Mangkir", "MK": "Mangkir", "A": "Mangkir", "ALPA": "Mangkir",
     "LK": "Dinas/Tgs Luar Kota (Perdin)", "DL": "Dinas/Tgs Luar Kota (Perdin)", "DK": "Dinas/Tgs Dalam Kota",
 }
+# Tab yang datanya lebih lengkap di file sumber site sendiri: dibaca langsung dari sana
+# (Keterangan + status radius). Kalau file sumber tidak bisa dibuka, pakai tab di sheet master.
+SOURCES = {
+    "RDC Tallo": {
+        "id": "161VFS8gaLSB9Ja48fgHczxTkgFFqwGIEVls4yJVtLj8",
+        "tab": "Data Kehadiran",
+        "cols": {"Date": "ABSEN_DATE", "Emp ID": "NIK", "Emp Name": "NAMA", "Job Ttl Name": "JOBDESK",
+                 "BU": "FACILITY", "Check In": "TIME ABSEN IN", "Check Out": "TIME ABSEN OUT",
+                 "Schedule": "ROSTER", "Keterangan": "DESCRIPTION"},
+        "radius_tab": "MSSCicoList",
+    },
+}
 SHIFT_RE = re.compile(r"^\s*(\S+)\s+(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})")
 
 COLUMNS = [
@@ -133,6 +145,45 @@ def norm_jobdesk(v):
     return s
 
 
+def read_source(gc, title):
+    """Baca data site dari file sumbernya (lebih lengkap). None kalau gagal."""
+    src = SOURCES[title]
+    try:
+        sh = gc.open_by_key(src["id"])
+        rows = sh.worksheet(src["tab"]).get_all_values(
+            value_render_option="UNFORMATTED_VALUE", date_time_render_option="SERIAL_NUMBER")
+        hi = next(i for i, r in enumerate(rows) if "Emp ID" in [str(x).strip() for x in r])
+        header = [str(h).strip() for h in rows[hi]]
+        df = pd.DataFrame(rows[hi + 1:], columns=header)
+        df = df[[c for c in src["cols"] if c in df.columns]].rename(columns=src["cols"])
+        df = df[df["NIK"].astype(str).str.strip() != ""].copy()
+        df["ABSEN_DATE"] = df["ABSEN_DATE"].map(norm_date)
+        df["NIK"] = df["NIK"].astype(str).str.strip()
+        # status radius dari log absen (MSSCicoList): InRadius In / Out = T/F
+        if src.get("radius_tab"):
+            try:
+                rr = sh.worksheet(src["radius_tab"]).get_all_values(
+                    value_render_option="UNFORMATTED_VALUE", date_time_render_option="SERIAL_NUMBER")
+                rad = pd.DataFrame(rr[1:], columns=[str(h).strip() for h in rr[0]])
+                rad = rad[["Emp ID", "Date", "InRadius In", "InRadius Out"]].copy()
+                rad["NIK"] = rad["Emp ID"].astype(str).str.strip()
+                rad["ABSEN_DATE"] = rad["Date"].map(norm_date)
+                rad = rad.drop_duplicates(["NIK", "ABSEN_DATE"])
+                lab = lambda v, kind: "" if str(v).strip() == "" else (
+                    f"{kind} (In Radius)" if str(v).strip().upper() in ("T", "TRUE") else f"{kind} (Out Radius)")
+                rad["ABSEN IN"] = rad["InRadius In"].map(lambda v: lab(v, "Hadir"))
+                rad["ABSEN OUT"] = rad["InRadius Out"].map(lambda v: lab(v, "Out"))
+                df = df.merge(rad[["NIK", "ABSEN_DATE", "ABSEN IN", "ABSEN OUT"]], on=["NIK", "ABSEN_DATE"], how="left")
+            except Exception as e:  # noqa: BLE001
+                print(f"  {title}: status radius tidak terbaca ({e})")
+        ket = (df["DESCRIPTION"].astype(str).str.strip() != "").sum()
+        print(f"  {title}: dibaca dari file sumber ({len(df)} baris, {ket} dengan Keterangan)")
+        return df
+    except Exception as e:  # noqa: BLE001
+        print(f"  {title}: file sumber tidak bisa dibuka ({e}) -> pakai tab di sheet master")
+        return None
+
+
 def main():
     creds = Credentials.from_service_account_info(
         json.loads(os.environ["GOOGLE_CREDENTIALS"]),
@@ -145,14 +196,17 @@ def main():
     all_niks, min_date = set(), "9999"
     meta = {"updated_at": dt.datetime.now(dt.timezone(dt.timedelta(hours=7))).isoformat(timespec="minutes"), "files": {}}
 
+    gc = gspread.authorize(creds)
     for title, fname in SHEETS.items():
-        ws = book.worksheet(title)
-        rows = ws.get_all_values(
-            value_render_option="UNFORMATTED_VALUE",
-            date_time_render_option="SERIAL_NUMBER",
-        )
-        header = [str(h).strip() for h in rows[0]]
-        df = pd.DataFrame(rows[1:], columns=header)
+        df = read_source(gc, title) if title in SOURCES else None
+        if df is None:
+            ws = book.worksheet(title)
+            rows = ws.get_all_values(
+                value_render_option="UNFORMATTED_VALUE",
+                date_time_render_option="SERIAL_NUMBER",
+            )
+            header = [str(h).strip() for h in rows[0]]
+            df = pd.DataFrame(rows[1:], columns=header)
         df = df[[c for c in COLUMNS if c in df.columns]].copy()
         df = df[df["NIK"].astype(str).str.strip() != ""]
 
