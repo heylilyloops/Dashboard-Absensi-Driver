@@ -1,10 +1,10 @@
 {
-  "updated_at": "2026-11-05T11:23+07:00",
+  "updated_at": "2026-11-05T16:28+07:00",
   "files": {
-    "NDC_JABABEKA.csv": 21539,
-    "NDC_CIKUPA.csv": 8195,
-    "NDC_SIDOARJO.csv": 5995,
-    "RDC_TALLO.csv": 1615
+    "NDC_JABABEKA.csv": 23889,
+    "NDC_CIKUPA.csv": 9089,
+    "NDC_SIDOARJO.csv": 6649,
+    "RDC_TALLO.csv": 1663
   },
   "variable_income": {
     "status": "ok",
