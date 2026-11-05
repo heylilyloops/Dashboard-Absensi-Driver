@@ -351,7 +351,7 @@ details.more>.inner{margin-top:8px}
         <b>Hari terjadwal</b> = semua hari kecuali OFF. <b>Kehadiran</b> = (Hadir + Dinas) ÷ hari terjadwal. Status dibaca dari kolom DESCRIPTION; “Late Present / Terlambat …” dihitung hadir.<br>
         <b>Pembanding</b> = periode sebelumnya dengan panjang sama (mis. 4 minggu sebelumnya). Warna di tabel = dibanding rata-rata semua site pada periode &amp; filter yang sama. Keduanya <b>bukan target resmi</b>.<br>
         <b>Shift</b> dari kode ROSTER aktual; jam mulai/selesai dari teks ROSTER PEOPLEPRO. Kode bukan shift (PL, GC, LK, …) memakai kode PeoplePro. Kode shift yang jamnya tidak tercatat (mis. M0066), UNSET, serta jam masuk &gt; 2 jam setelah / &gt; 4 jam sebelum mulai shift dianggap <b>jadwal tidak terbaca</b> dan tidak dihitung di telat maupun lewat shift.<br>
-        <b>Telat</b> = jam absen masuk &gt; mulai shift + toleransi. <b>Tidak absen pulang</b> = hadir tanpa jam pulang, atau status pulang “Tidak Terdeteksi / Tidak Absen Pulang”. <b>Masuk saat OFF</b> = ada jam masuk pada hari OFF.<br>
+        <b>Telat</b> = jam absen masuk &gt; mulai shift + toleransi. <b>Tidak absen pulang</b> = hadir (bukan dinas) tanpa jam pulang, atau status pulang “Tidak Terdeteksi / Tidak Absen Pulang”. <b>Masuk saat OFF</b> = ada jam masuk pada hari OFF.<br>
         <b>Rentang lama kerja</b> = durasi absen masuk → pulang per hari, dibanding jam kerja normal <b>8 jam</b>: ≤ 8 j (normal), 8–10 j (lebih ≤ 2 j), 10–12 j (lebih 2–4 j, masih dalam batas lembur harian 4 jam PP 35/2021), &gt; 12 j (melewati batas). Durasi termasuk waktu istirahat; data &gt; 20 jam dianggap salah input. <b>Absen di luar radius</b> = status absen masuk atau pulang “Out Radius”; dihitung dari hari hadir yang punya status radius.<br>
         <b>Jam lewat shift</b> = jam absen pulang − akhir shift, hanya jika ≥ 30 menit. Ini jam kerja aktual, bukan OT yang dibayar.
         <b>Skema</b> dicocokkan per NIK &amp; tanggal dengan data Variable Income: OT approved / Insentif / Tanpa OT-insentif. Tanggal setelah cakupan data Variable Income ditandai “belum tercatat”. Rupiah dilihat di dashboard Variable Income.<br>
@@ -468,7 +468,8 @@ function prepare(raw){
     const code = shf(o.roster) ? o.roster : (!looksShift && shf(o.pp) ? o.pp : null);
     o.shift = code; o.shiftT = shf(code);
     o.mismatch = !!(shf(o.roster) && shf(o.pp) && o.roster!==o.pp);
-    o.noOut = o.present && (o.tout==null || /tidak (ter|absen)/i.test(o.outStat));
+    // dinas/perdin tidak wajib absen pulang di lokasi
+    o.noOut = o.status==='HADIR' && (o.tout==null || /tidak (ter|absen)/i.test(o.outStat));
     const rIn = String(r['ABSEN IN']||''), rOut = String(r['ABSEN OUT']||'');
     o.radKnown = o.present && /radius/i.test(rIn+' '+rOut);
     o.outRad = o.radKnown && /out radius/i.test(rIn+' '+rOut);
