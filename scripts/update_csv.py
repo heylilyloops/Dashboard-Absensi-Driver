@@ -207,7 +207,10 @@ def main():
             )
             header = [str(h).strip() for h in rows[0]]
             df = pd.DataFrame(rows[1:], columns=header)
-        df = df[[c for c in COLUMNS if c in df.columns]].copy()
+        for c in COLUMNS:
+            if c not in df.columns:
+                df[c] = ""
+        df = df[COLUMNS].copy()
         df = df[df["NIK"].astype(str).str.strip() != ""]
 
         df["ABSEN_DATE"] = df["ABSEN_DATE"].map(norm_date)
