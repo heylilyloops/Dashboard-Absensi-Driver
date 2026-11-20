@@ -190,9 +190,9 @@ details.more>.inner{margin-top:8px}
       <div class="f"><label>Sampai</label><input type="date" id="fTo"></div>
       <div class="f"><label>Site</label><select id="fSite"></select></div>
       <div class="f"><label>Facility</label><select id="fFac"></select></div>
-      <div class="f"><label>Jobdesk</label><select id="fJob"></select></div>
-      <div class="f"><label>Toleransi telat</label>
-        <select id="fTol"><option value="0">0 menit</option><option value="5" selected>5 menit</option><option value="10">10 menit</option><option value="15">15 menit</option></select></div>
+      <div class="f"><label>Jabatan</label><select id="fJob"></select></div>
+      <div class="f"><label>Dianggap telat setelah</label>
+        <select id="fTol"><option value="0">lewat 0 menit</option><option value="5" selected>lewat 5 menit</option><option value="10">lewat 10 menit</option><option value="15">lewat 15 menit</option></select></div>
       <div class="spacer"></div>
       <button class="btn" id="btnReset">Reset</button>
     </div>
@@ -202,75 +202,75 @@ details.more>.inner{margin-top:8px}
     <div class="sec-title"><h2>Ringkasan Periode</h2><span id="periodLbl"></span></div>
     <div class="sum" id="sum"></div>
 
-    <div class="sec-title"><h2>Pain Point</h2><span>diurutkan dari yang paling perlu ditindaklanjuti · merah = memburuk, hijau = membaik vs periode sebelumnya</span></div>
+    <div class="sec-title"><h2>Masalah Utama</h2><span>urut dari yang paling perlu ditindaklanjuti · merah = makin parah, hijau = membaik dibanding periode sebelumnya</span></div>
     <div class="pains" id="pains"></div>
 
     <!-- 1 -->
-    <div class="sec-title"><h2>1 · Kehadiran MPP</h2><span>hadir, cuti, sakit, izin &amp; mangkir pada hari kerja terjadwal</span></div>
+    <div class="sec-title"><h2>1 · Kehadiran Driver</h2><span>berapa yang masuk kerja dari yang seharusnya masuk · hari OFF tidak dihitung</span></div>
     <div class="grid3">
       <div class="card">
-        <h3>Kehadiran per minggu</h3>
-        <div class="desc">Hadir (termasuk dinas) ÷ hari terjadwal · garis putus-putus = rata-rata semua site</div>
+        <h3>% Kehadiran per minggu</h3>
+        <div class="desc">Hari masuk kerja (termasuk dinas) dibagi hari wajib masuk · garis putus-putus = rata-rata semua site</div>
         <div class="legend" id="lgTrend"></div>
         <div class="chart"><canvas id="cTrend"></canvas></div>
       </div>
       <div class="card">
-        <h3>Penyebab tidak hadir</h3>
-        <div class="desc">Jumlah hari tidak hadir per site</div>
+        <h3>Alasan tidak masuk</h3>
+        <div class="desc">Jumlah hari driver tidak masuk di hari wajib masuk, per site</div>
         <div class="legend" id="lgAbs"></div>
         <div class="chart"><canvas id="cAbs"></canvas></div>
       </div>
     </div>
     <div class="card" style="margin-top:14px">
-      <h3>Rekap Kehadiran per Facility</h3>
-      <div class="desc">Format sama dengan laporan Hub · warna sel makin pekat = makin banyak hari</div>
+      <h3>Rekap kehadiran per facility</h3>
+      <div class="desc">Format sama dengan laporan Hub · makin pekat warnanya = makin banyak harinya</div>
       <div class="tbl-wrap" style="max-height:none"><table class="hubtbl" id="tHub"></table></div>
     </div>
     <div class="card" style="margin-top:14px">
-      <h3>Watchlist Karyawan</h3>
+      <h3>Driver yang perlu dipantau</h3>
       <div class="wl-note" id="wlNote"></div>
       <div class="tbl-wrap"><table class="hubtbl" id="tWatch"></table></div>
     </div>
 
     <!-- 2 -->
-    <div class="sec-title"><h2>2 · Kepatuhan Jadwal</h2><span>telat masuk, tidak absen pulang &amp; lokasi absen</span></div>
+    <div class="sec-title"><h2>2 · Disiplin Absen</h2><span>telat masuk, lupa absen pulang, dan absen di luar lokasi</span></div>
     <div class="grid2">
       <div class="card">
         <h3>Telat masuk per minggu</h3>
-        <div class="desc">% hari hadir yang masuk melewati jam mulai shift + toleransi</div>
+        <div class="desc">% hari masuk yang datangnya lewat dari jam mulai shift (sesuai batas telat di filter)</div>
         <div class="legend" id="lgLateW"></div>
         <div class="chart"><canvas id="cLateW"></canvas></div>
       </div>
       <div class="card">
-        <h3>Tidak absen pulang per minggu</h3>
-        <div class="desc">% hari hadir tanpa catatan jam pulang</div>
+        <h3>Lupa absen pulang per minggu</h3>
+        <div class="desc">% hari masuk yang tidak ada jam absen pulangnya · jam kerja hari itu jadi tidak bisa dihitung</div>
         <div class="legend" id="lgNoOutW"></div>
         <div class="chart"><canvas id="cNoOutW"></canvas></div>
       </div>
     </div>
-    <details class="more"><summary>Lihat detail kepatuhan jadwal</summary>
+    <details class="more"><summary>Lihat detail disiplin absen</summary>
       <div class="inner grid2">
         <div class="card">
-          <h3>Distribusi selisih jam masuk</h3>
-          <div class="desc">Selisih jam masuk vs jam mulai shift · negatif = datang lebih awal</div>
+          <h3>Jam datang dibanding jam mulai shift</h3>
+          <div class="desc">Berapa menit driver datang lebih awal (minus) atau terlambat (plus) dari jam mulai shift</div>
           <div class="chart"><canvas id="cLate"></canvas></div>
         </div>
         <div class="card">
-          <h3>Kualitas data jadwal</h3>
-          <div class="desc">Hal yang membuat telat &amp; lewat shift tidak bisa dihitung untuk sebagian hari</div>
+          <h3>Kelengkapan data jadwal</h3>
+          <div class="desc">Hal yang membuat telat dan pulang lewat shift tidak bisa dihitung di sebagian hari</div>
           <div class="dq" id="dq"></div>
         </div>
       </div>
     <div class="inner grid2" style="margin-top:14px">
         <div class="card">
-          <h3>Absen di luar radius per minggu</h3>
-          <div class="desc">% hari hadir dengan absen masuk atau pulang di luar radius lokasi</div>
+          <h3>Absen di luar lokasi per minggu</h3>
+          <div class="desc">% hari masuk yang absen masuk atau pulangnya dilakukan di luar area site</div>
           <div class="legend" id="lgRadW"></div>
           <div class="chart"><canvas id="cRadW"></canvas></div>
         </div>
         <div class="card">
-          <h3>Luar radius: saat masuk vs saat pulang</h3>
-          <div class="desc">% hari hadir per site</div>
+          <h3>Absen di luar lokasi: saat masuk vs saat pulang</h3>
+          <div class="desc">% hari masuk, per site</div>
           <div class="legend" id="lgRadSite"></div>
           <div class="chart"><canvas id="cRadSite"></canvas></div>
         </div>
@@ -278,17 +278,17 @@ details.more>.inner{margin-top:8px}
     </details>
 
     <!-- 3 -->
-    <div class="sec-title"><h2>3 · Jam Kerja &amp; Lewat Shift</h2><span>lama kerja vs normal 8 jam · lewat shift dicocokkan dengan OT approved &amp; insentif</span></div>
+    <div class="sec-title"><h2>3 · Lama Kerja &amp; Pulang Lewat Shift</h2><span>dibanding jam kerja normal 8 jam · jam pulang lewat shift dicek apakah dibayar OT atau insentif</span></div>
     <div class="grid3">
       <div class="card">
-        <h3>Lama kerja per hari, per minggu ⚠</h3>
-        <div class="desc">Komposisi hari kerja (absen masuk → pulang) dibanding jam kerja normal 8 jam · batas lembur harian 4 jam (PP 35/2021)</div>
+        <h3>Berapa lama driver kerja sehari, per minggu ⚠</h3>
+        <div class="desc">Dihitung dari absen masuk sampai absen pulang · normal 8 jam, lembur maksimal 4 jam sehari (PP 35/2021), jadi di atas 12 jam sudah lewat batas</div>
         <div class="legend" id="lgBandW"></div>
         <div class="chart"><canvas id="cBandW"></canvas></div>
       </div>
       <div class="card">
         <h3>Per site</h3>
-        <div class="desc">Komposisi lama kerja per hari</div>
+        <div class="desc">Pembagian hari kerja menurut lamanya</div>
         <div class="legend" id="lgBandS"></div>
         <div class="chart"><canvas id="cBandS"></canvas></div>
       </div>
@@ -296,28 +296,28 @@ details.more>.inner{margin-top:8px}
     <div class="vi-note" id="viNote" style="margin-top:14px"></div>
     <div class="grid3">
       <div class="card">
-        <h3>Jam lewat shift per minggu</h3>
-        <div class="desc">Dipecah menurut skema pembayaran hari itu</div>
+        <h3>Jam pulang lewat shift per minggu</h3>
+        <div class="desc">Total jam driver masih kerja setelah shift selesai, dipisah: dibayar OT, dapat insentif, atau tidak dibayar apa-apa</div>
         <div class="legend" id="lgOT"></div>
         <div class="chart"><canvas id="cOT"></canvas></div>
       </div>
       <div class="card">
         <h3>Per site</h3>
-        <div class="desc">Jam lewat shift menurut skema</div>
+        <div class="desc">Jam pulang lewat shift, dipisah menurut status bayarnya</div>
         <div class="legend" id="lgOTSite"></div>
         <div class="chart"><canvas id="cOTSite"></canvas></div>
       </div>
     </div>
-    <details class="more"><summary>Lihat personel dengan lewat shift terbanyak</summary>
+    <details class="more"><summary>Lihat driver yang paling sering pulang lewat shift</summary>
       <div class="inner grid2">
         <div class="card">
-          <h3>Top 10 lewat shift tanpa OT / insentif</h3>
-          <div class="desc">Jam lewat shift pada hari tanpa OT approved maupun insentif</div>
+          <h3>10 driver dengan jam lewat shift tidak dibayar terbanyak</h3>
+          <div class="desc">Jam kerja setelah shift selesai di hari yang tidak ada OT maupun insentifnya</div>
           <div class="chart tall"><div class="empty hidden" id="emptyTopT"></div><canvas id="cTopOT"></canvas></div>
         </div>
         <div class="card">
-          <h3>Top 10 jam lewat shift (semua skema)</h3>
-          <div class="desc">Total jam setelah akhir shift</div>
+          <h3>10 driver dengan jam lewat shift terbanyak</h3>
+          <div class="desc">Total jam kerja setelah shift selesai, dibayar maupun tidak</div>
           <div class="legend" id="lgTopAll"></div>
           <div class="chart tall"><canvas id="cTopAll"></canvas></div>
         </div>
@@ -325,28 +325,28 @@ details.more>.inner{margin-top:8px}
     </details>
 
     <!-- 4 -->
-    <div class="sec-title" id="lk"><h2>4 · Siklus Perjalanan Luar Kota</h2><span>kondisi driver sebelum berangkat, selama perdin, dan setelah pulang · dasar evaluasi expansi pengiriman luar kota</span></div>
+    <div class="sec-title" id="lk"><h2>4 · Pengiriman Luar Kota</h2><span>kondisi driver sehari sebelum berangkat, selama perdin, dan sehari setelah pulang · bahan evaluasi expansi luar kota</span></div>
     <div class="sum" id="lkSum"></div>
     <div class="grid3" style="margin-top:14px">
       <div class="card">
-        <h3>Sebelum berangkat vs setelah pulang</h3>
-        <div class="desc">Status driver di hari sebelum trip (H-1) dan hari setelah pulang (H+1) · % dari trip yang datanya tersedia</div>
+        <h3>Sehari sebelum berangkat vs sehari setelah pulang</h3>
+        <div class="desc">Driver istirahat (OFF), kerja biasa, kerja lebih dari 12 jam, atau tidak masuk · % dari jumlah trip</div>
         <div class="legend" id="lgLkBA"></div>
         <div class="chart" style="height:220px"><canvas id="cLkBA"></canvas></div>
       </div>
       <div class="card">
-        <h3>Lama trip vs dapat OFF setelah pulang</h3>
-        <div class="desc">% trip yang diikuti OFF di H+1, per lama trip</div>
+        <h3>Dapat libur setelah pulang?</h3>
+        <div class="desc">% trip yang besoknya driver dapat OFF, dikelompokkan menurut lama perjalanan</div>
         <div class="chart" style="height:220px"><canvas id="cLkLen"></canvas></div>
       </div>
     </div>
     <div class="card" style="margin-top:14px">
-      <h3>Siklus luar kota per site</h3>
-      <div class="desc">Trip dihitung dari tanggal berangkat di periode terpilih · warna dibanding rata-rata semua site</div>
+      <h3>Pengiriman luar kota per site</h3>
+      <div class="desc">Trip dihitung dari tanggal berangkat · warna = dibanding rata-rata semua site</div>
       <div class="tbl-wrap" style="max-height:none"><table id="tLkSite"></table></div>
     </div>
     <div class="card" style="margin-top:14px">
-      <h3>Driver luar kota</h3>
+      <h3>Driver yang berangkat luar kota</h3>
       <div class="wl-note" id="lkNote"></div>
       <div class="tbl-tools">
         <div class="chips" id="lkChips"></div>
@@ -357,21 +357,21 @@ details.more>.inner{margin-top:8px}
       </div>
       <div class="tbl-wrap"><table id="tLkDrv"></table></div>
     </div>
-    <details class="more"><summary>Lihat detail per trip</summary>
+    <details class="more"><summary>Lihat rincian tiap perjalanan</summary>
       <div class="inner card">
-        <div class="desc">Satu baris = satu trip (hari perdin berturut-turut). Baris merah = trip berisiko. Mengikuti pencarian di tabel driver.</div>
+        <div class="desc">Satu baris = satu perjalanan (hari perdin berturut-turut). Baris merah = perjalanan berisiko. Ikut pencarian di tabel driver di atas.</div>
         <div class="tbl-wrap"><table id="tLkTrip"></table></div>
       </div>
     </details>
 
     <!-- ===== LAPISAN SITE ===== -->
-    <div class="band" id="aksi">Tindak lanjut site</div>
-    <div class="sec-title"><h2>Ringkasan per Site</h2><span>warna dibanding rata-rata semua site, bukan target</span></div>
+    <div class="band" id="aksi">Untuk tindak lanjut site</div>
+    <div class="sec-title"><h2>Ringkasan per Site</h2><span>warna = dibanding rata-rata semua site, bukan target resmi</span></div>
     <div class="card">
       <div class="tbl-wrap" style="max-height:none"><table id="tSite"></table></div>
     </div>
 
-    <div class="sec-title" id="daftar"><h2>Daftar Personel</h2><span>pilih kategori untuk daftar tindak lanjut · klik judul kolom untuk mengurutkan</span></div>
+    <div class="sec-title" id="daftar"><h2>Daftar Driver</h2><span>pilih kategori untuk melihat siapa yang perlu ditindaklanjuti · klik judul kolom untuk mengurutkan</span></div>
     <div class="card">
       <div class="tbl-tools">
         <div class="chips" id="chips"></div>
@@ -386,17 +386,17 @@ details.more>.inner{margin-top:8px}
       <div class="tbl-wrap"><table id="tPerson"></table></div>
     </div>
 
-    <details class="more" style="margin-top:22px"><summary>Definisi &amp; cara hitung</summary>
+    <details class="more" style="margin-top:22px"><summary>Cara baca &amp; cara hitung</summary>
       <div class="inner card method">
-        <b>Hari terjadwal</b> = semua hari kecuali OFF. <b>Kehadiran</b> = (Hadir + Dinas) ÷ hari terjadwal. Status dibaca dari kolom DESCRIPTION; “Late Present / Terlambat …” dihitung hadir.<br>
-        <b>Pembanding</b> = periode sebelumnya dengan panjang sama (mis. 4 minggu sebelumnya). Warna di tabel = dibanding rata-rata semua site pada periode &amp; filter yang sama. Keduanya <b>bukan target resmi</b>.<br>
-        <b>Shift</b> dari kode ROSTER aktual; jam mulai/selesai dari teks ROSTER PEOPLEPRO. Kode bukan shift (PL, GC, LK, …) memakai kode PeoplePro. Kode shift yang jamnya tidak tercatat (mis. M0066), UNSET, serta jam masuk &gt; 2 jam setelah / &gt; 4 jam sebelum mulai shift dianggap <b>jadwal tidak terbaca</b> dan tidak dihitung di telat maupun lewat shift.<br>
-        <b>Telat</b> = jam absen masuk &gt; mulai shift + toleransi. <b>Tidak absen pulang</b> = hadir (bukan dinas) tanpa jam pulang, atau status pulang “Tidak Terdeteksi / Tidak Absen Pulang”. <b>Masuk saat OFF</b> = ada jam masuk pada hari OFF.<br>
-        <b>Rentang lama kerja</b> = durasi absen masuk → pulang per hari, dibanding jam kerja normal <b>8 jam</b>: ≤ 8 j (normal), 8–10 j (lebih ≤ 2 j), 10–12 j (lebih 2–4 j, masih dalam batas lembur harian 4 jam PP 35/2021), &gt; 12 j (melewati batas). Durasi termasuk waktu istirahat; data &gt; 20 jam dianggap salah input. <b>Absen di luar radius</b> = status absen masuk atau pulang “Out Radius”; dihitung dari hari hadir yang punya status radius.<br>
-        <b>Trip luar kota</b> = rangkaian hari berstatus Dinas/Tgs Luar Kota (Perdin) atau luar negeri yang berturut-turut per NIK; dinas dalam kota tidak dihitung. <b>H-1</b> = hari sebelum berangkat, <b>H+1</b> = hari setelah pulang. Kerja &gt; 12 jam = durasi absen masuk → pulang hari itu. <b>OFF setelah pulang</b> = jumlah hari OFF berturut-turut mulai H+1. Trip yang berangkat di hari pertama data atau pulang di hari terakhir data tidak punya H-1/H+1 dan tidak ikut dihitung di persentase sebelum/sesudah. <b>Trip berisiko</b> (acuan sementara, belum standar resmi) = H-1 kerja &gt; 12 jam, H+1 kerja &gt; 12 jam, atau trip ≥ 3 hari tanpa OFF di H+1. <b>Absen pulang saat perdin</b> = % hari perdin yang punya jam absen pulang.<br>
-        <b>Jam lewat shift</b> = jam absen pulang − akhir shift, hanya jika ≥ 30 menit. Ini jam kerja aktual, bukan OT yang dibayar.
-        <b>Skema</b> dicocokkan per NIK &amp; tanggal dengan data Variable Income: OT approved / Insentif / Tanpa OT-insentif. Tanggal setelah cakupan data Variable Income ditandai “belum tercatat”. Rupiah dilihat di dashboard Variable Income.<br>
-        <b>Site &amp; NIK</b> mengikuti Variable Income: NIK angka tanpa nol di depan; MPP KLS Jakarta tampil sebagai Jakarta (KLS). BU dari kata pertama FACILITY (KLO dibaca KLS). Personel KLS HO ditempatkan sesuai lokasinya: yang ada di daftar MPP KLS Jakarta masuk Jakarta (KLS), sisanya Jababeka; facility KLS disatukan per site.
+        <b>% Kehadiran</b> = hari driver masuk kerja ÷ hari dia wajib masuk. <b>Hari wajib masuk</b> = semua hari sesuai jadwal, kecuali hari OFF. Contoh: dijadwalkan masuk 26 hari, masuk 23 hari, sakit 1, cuti 2 → kehadiran 23 ÷ 26 = 88%.<br>
+        <b>Dihitung masuk:</b> masuk normal (termasuk yang telat), lupa absen tapi ada jam masuk/pulang, dinas dalam kota maupun luar kota (perdin), masuk di hari libur nasional. <b>Dihitung tidak masuk:</b> sakit, cuti, izin (termasuk menikah, melahirkan, duka), mangkir, dan tidak ada keterangan. <b>Tidak dihitung sama sekali:</b> hari OFF dan personel yang mutasi.<br>
+        <b>Warna &amp; panah naik/turun</b> = dibanding periode sebelumnya dengan panjang yang sama (misalnya 4 minggu sebelumnya) atau dibanding rata-rata semua site. Ini <b>bukan target resmi</b>.<br>
+        <b>Telat</b> = jam absen masuk lewat dari jam mulai shift, sesuai batas di filter "Dianggap telat setelah". Jam shift diambil dari jadwal PeoplePro. Kalau jadwalnya tidak bisa dibaca (kode shift tanpa jam, UNSET, atau jam masuk jauh dari jam shift), hari itu tidak dihitung telat maupun lewat shift.<br>
+        <b>Lupa absen pulang</b> = driver masuk (bukan dinas) tapi tidak ada jam absen pulang. <b>Masuk di hari OFF</b> = ada jam absen masuk di hari yang jadwalnya OFF. <b>Absen di luar lokasi</b> = absen masuk atau pulang tercatat "Out Radius" (di luar area site).<br>
+        <b>Lama kerja</b> = dari absen masuk sampai absen pulang, sudah termasuk istirahat. Dibanding jam normal <b>8 jam</b>: sampai 8 jam = normal, 8–10 jam = lembur sampai 2 jam, 10–12 jam = lembur 2–4 jam (masih dalam batas lembur 4 jam sehari, PP 35/2021), lebih dari 12 jam = lewat batas. Data di atas 20 jam dianggap salah input.<br>
+        <b>Jam pulang lewat shift</b> = jam absen pulang dikurangi jam selesai shift, hanya dihitung kalau 30 menit atau lebih. Ini jam kerja nyata, bukan jam OT yang dibayar. Lalu dicek per orang per tanggal ke data Variable Income: <b>dibayar OT</b>, <b>dapat insentif</b>, atau <b>tidak dibayar</b>. Tanggal yang belum masuk data Variable Income ditandai "belum bisa dicek". Nilai rupiahnya ada di dashboard Variable Income.<br>
+        <b>Perjalanan luar kota (trip)</b> = hari berstatus Dinas/Tgs Luar Kota (Perdin) yang berturut-turut untuk satu orang. Dinas dalam kota tidak dihitung. Dilihat kondisi driver <b>sehari sebelum berangkat</b> dan <b>sehari setelah pulang</b>: istirahat (OFF), kerja biasa, kerja lebih dari 12 jam, atau tidak masuk. Trip yang berangkat di hari pertama data atau pulang di hari terakhir data tidak ikut dihitung di bagian sebelum/sesudah. <b>Perjalanan berisiko</b> (acuan sementara, belum standar resmi) = sehari sebelum berangkat kerja lebih dari 12 jam, besoknya setelah pulang kerja lebih dari 12 jam, atau perjalanan 3 hari lebih tapi besoknya tidak dapat OFF.<br>
+        <b>Site &amp; NIK</b> mengikuti data Variable Income: NIK angka ditulis tanpa nol di depan. Personel KLS HO yang terdaftar di MPP KLS Jakarta tampil sebagai Jakarta (KLS), sisanya masuk Jababeka.
       </div>
     </details>
   </div>
@@ -423,9 +423,9 @@ const INK2 = '#475569', GRID = '#eef1f6', AXIS = '#cbd5e1';
 // rentang lama kerja per hari (jam, absen masuk → pulang)
 const BANDS = [
   {k:'N',  lo:0,  hi:8,  l:'≤ 8 jam (normal)',            c:'#86b6ef'},
-  {k:'B1', lo:8,  hi:10, l:'8–10 jam (lebih ≤ 2 jam)',     c:'#f5c49c'},
-  {k:'B2', lo:10, hi:12, l:'10–12 jam (lebih 2–4 jam)',    c:'#eb8a4f'},
-  {k:'B3', lo:12, hi:99, l:'> 12 jam (lewat batas lembur)',c:'#b8401a'},
+  {k:'B1', lo:8,  hi:10, l:'8–10 jam (lembur ≤ 2 jam)',     c:'#f5c49c'},
+  {k:'B2', lo:10, hi:12, l:'10–12 jam (lembur 2–4 jam)',    c:'#eb8a4f'},
+  {k:'B3', lo:12, hi:99, l:'> 12 jam (lewat batas aman)',c:'#b8401a'},
 ];
 const bandOf = m => { const h=m/60; return (BANDS.find(b=>h>b.lo&&h<=b.hi)||BANDS[0]).k; };
 
@@ -464,14 +464,14 @@ function classify(r){
   return 'LAINNYA';
 }
 const ABS_KEYS = ['SAKIT','CUTI','IZIN','ALPA','LAINNYA'];
-const ABS_LBL  = {SAKIT:'Sakit',CUTI:'Cuti',IZIN:'Izin (termasuk izin khusus)',ALPA:'Mangkir',LAINNYA:'Tanpa keterangan'};
+const ABS_LBL  = {SAKIT:'Sakit',CUTI:'Cuti',IZIN:'Izin (termasuk menikah, melahirkan, duka)',ALPA:'Mangkir',LAINNYA:'Tidak ada keterangan'};
 
 /* ================= DATA PREP ================= */
 let ROWS = [], SHIFT = {}, VI = null;   // VI = {day:Map, site:Map, cover, otUntil, insUntil, label}
 const SITE_LABEL = {'NDC Jababeka':'Jababeka','NDC Cikupa':'Cikupa','NDC Sidoarjo':'Sidoarjo','RDC Tallo':'Tallo'};
 const nikN = n => { n=String(n||'').trim(); return /^\d+$/.test(n) ? String(parseInt(n,10)) : n.toUpperCase(); };
 const SCHEMES = ['OT','INS','TANPA','BELUM'];
-const SCH_LBL = {OT:'OT approved',INS:'Insentif',TANPA:'Tanpa OT/insentif',BELUM:'Belum tercatat (data OT/insentif belum update)'};
+const SCH_LBL = {OT:'Dibayar OT',INS:'Dapat insentif',TANPA:'Tidak dibayar',BELUM:'Belum bisa dicek (data OT/insentif belum update)'};
 const SCH_COL = {OT:'#2a78d6',INS:'#1baf7a',TANPA:'#eb6834',BELUM:'#c3c2b7'};
 
 function prepareVI(daily, pers, info){
@@ -607,7 +607,7 @@ function setupFilters(){
   $('fPreset').value='4w'; applyPreset('4w');
   opts($('fSite'), uniq(ROWS.map(r=>r.site)), 'Semua site');
   opts($('fFac'),  uniq(ROWS.map(r=>r.fac)),  'Semua facility');
-  opts($('fJob'),  uniq(ROWS.map(r=>r.job)),  'Semua jobdesk');
+  opts($('fJob'),  uniq(ROWS.map(r=>r.job)),  'Semua jabatan');
   $('fPreset').addEventListener('change',()=>{ applyPreset($('fPreset').value); render(); });
   ['fFrom','fTo'].forEach(id=>$(id).addEventListener('change',()=>{ $('fPreset').value='custom'; render(); }));
   ['fFac','fJob','fTol'].forEach(id=>$(id).addEventListener('change',render));
@@ -649,7 +649,7 @@ function tile(q, val, note, cur, prev, higherBad, unit='pp', cls=''){
     const diff = cur-prev, ad=Math.abs(diff);
     if(ad < 0.05) d = `<span class="delta flat">= sama dengan periode sebelumnya</span>`;
     else { const worse = higherBad ? diff>0 : diff<0;
-      d = `<span class="delta ${worse?'down':'up'}">${diff>0?'▲':'▼'} ${fmt(ad,1)}${unit==='pp'?' poin':' '+unit} · ${worse?'memburuk':'membaik'}</span>`; }
+      d = `<span class="delta ${worse?'down':'up'}">${diff>0?'▲':'▼'} ${fmt(ad,1)}${unit==='pp'?' poin':' '+unit} · ${worse?'makin parah':'membaik'}</span>`; }
   } else d = `<span class="delta flat">belum ada pembanding</span>`;
   if(cls) return `<div class="tile ${cls}"><div class="v">${val}</div><div class="q">${q}</div><div class="n">${note}</div>${d}</div>`;
   return `<div class="tile"><div class="q">${q}</div><div class="v">${val}</div><div class="n">${note}</div>${d}</div>`;
@@ -674,7 +674,7 @@ function render(){
   const P = people(rows,tol);
   CUR = {rows,A,B,SA,P,sites,tol};
 
-  $('periodLbl').textContent = `${dLbl(from)} – ${dLbl(to)} ${to.slice(0,4)} · ${fmt(A.people.size)} personel` + (B ? ` · dibanding ${dLbl(pFrom)} – ${dLbl(pTo)}` : '');
+  $('periodLbl').textContent = `${dLbl(from)} – ${dLbl(to)} ${to.slice(0,4)} · ${fmt(A.people.size)} orang` + (B ? ` · dibanding ${dLbl(pFrom)} – ${dLbl(pTo)}` : '');
 
   /* ---- coverage VI dalam periode ---- */
   const viCover = VI && VI.cover ? VI.cover : '';
@@ -698,17 +698,17 @@ function render(){
     (()=>{ const jobs = uniq(rows.map(r=>r.job)).map(j=>`${j.toLowerCase().replace(/\b\w/g,c=>c.toUpperCase())} ${fmt(new Set(rows.filter(r=>r.job===j).map(r=>r.nik)).size)}`).join(' · ');
       const mk = rows.filter(r=>r.status==='ALPA'), mkOrg = new Set(mk.map(r=>r.nik)).size, mkB = B?B.abs.ALPA:null;
       const oth = A.abs.CUTI+A.abs.SAKIT+A.abs.IZIN+A.abs.LAINNYA, othB = B?B.abs.CUTI+B.abs.SAKIT+B.abs.IZIN+B.abs.LAINNYA:null;
-      return tile('Total MPP', fmt(A.people.size), jobs, null,null,null,'pp','hub neutral') +
-        tile('% Kehadiran', att==null?'–':fmt(att,2)+'%', `${fmt(A.present)} hadir dari ${fmt(A.sched)} hari kerja`, att, attB, false, 'pp', 'hub good') +
-        tile('% Mangkir', fmt(rate(A.abs.ALPA,A.sched)||0,2)+'%', `${fmt(mkOrg)} karyawan – ${fmt(A.abs.ALPA)} hari mangkir`, rate(A.abs.ALPA,A.sched), B&&rate(mkB,B.sched), true, 'pp', A.abs.ALPA?'hub bad':'hub good') +
-        tile('% Others', fmt(rate(oth,A.sched)||0,2)+'%', `Cuti ${fmt(A.abs.CUTI)} · Sakit ${fmt(A.abs.SAKIT)} · Izin ${fmt(A.abs.IZIN)} · Tanpa ket. ${fmt(A.abs.LAINNYA)}`, rate(oth,A.sched), B&&rate(othB,B.sched), true, 'pp', 'hub neutral'); })() +
-    tile('Telat masuk', late==null?'–':fmt(late,1)+'%', `${fmt(A.late)} kali · rata-rata ${A.late?fmt(A.lateMin/A.late,0):'–'} menit`, late, lateB, true) +
-    tile('Tidak absen pulang', noOut==null?'–':fmt(noOut,1)+'%', `${fmt(A.noOut)} kali dari ${fmt(A.present)} hari hadir`, noOut, noOutB, true) +
-    tile('Kerja > 12 jam sehari ⚠', rate(A.long12,A.durN)==null?'–':fmt(rate(A.long12,A.durN),1)+'%', `≤ 8 j ${pct(A.band.N,A.durN,0)} · 8–10 j ${pct(A.band.B1,A.durN,0)} · 10–12 j ${pct(A.band.B2,A.durN,0)} · rata-rata ${hhmm(A.durN?A.durSum/A.durN:null)}`, rate(A.long12,A.durN), B&&rate(B.long12,B.durN), true) +
-    (C ? tile('Lewat shift tanpa OT / insentif'+(win.own?'':` <span style="font-weight:500">· ${dLbl(win.f)}–${dLbl(win.t)}</span>`), fmt(tanpa,0)+'<small>jam</small>',
-          `${fmt(C.schD.TANPA)} hari kerja · ${pct(C.schJ.TANPA,C.otSum,0)} dari jam lewat shift${win.own? (covTo<to?` · s/d ${dLbl(covTo)}`:'') : ' · periode terakhir yang data OT/insentif-nya lengkap'}`,
+      return tile('Jumlah orang (MPP)', fmt(A.people.size), jobs, null,null,null,'pp','hub neutral') +
+        tile('% Kehadiran', att==null?'–':fmt(att,2)+'%', `${fmt(A.present)} hari masuk dari ${fmt(A.sched)} hari wajib masuk`, att, attB, false, 'pp', 'hub good') +
+        tile('% Mangkir', fmt(rate(A.abs.ALPA,A.sched)||0,2)+'%', `${fmt(mkOrg)} orang · total ${fmt(A.abs.ALPA)} hari tidak masuk tanpa izin`, rate(A.abs.ALPA,A.sched), B&&rate(mkB,B.sched), true, 'pp', A.abs.ALPA?'hub bad':'hub good') +
+        tile('% Cuti, sakit & izin', fmt(rate(oth,A.sched)||0,2)+'%', `Cuti ${fmt(A.abs.CUTI)} · Sakit ${fmt(A.abs.SAKIT)} · Izin ${fmt(A.abs.IZIN)} · Tanpa keterangan ${fmt(A.abs.LAINNYA)}`, rate(oth,A.sched), B&&rate(othB,B.sched), true, 'pp', 'hub neutral'); })() +
+    tile('Telat masuk', late==null?'–':fmt(late,1)+'%', `${fmt(A.late)} kali telat · rata-rata telat ${A.late?fmt(A.lateMin/A.late,0):'–'} menit`, late, lateB, true) +
+    tile('Lupa absen pulang', noOut==null?'–':fmt(noOut,1)+'%', `${fmt(A.noOut)} kali dari ${fmt(A.present)} hari masuk`, noOut, noOutB, true) +
+    tile('Kerja lebih dari 12 jam sehari ⚠', rate(A.long12,A.durN)==null?'–':fmt(rate(A.long12,A.durN),1)+'%', `rata-rata kerja ${hhmm(A.durN?A.durSum/A.durN:null)} sehari · normal (≤ 8 j) hanya ${pct(A.band.N,A.durN,0)} hari`, rate(A.long12,A.durN), B&&rate(B.long12,B.durN), true) +
+    (C ? tile('Kerja lewat shift tidak dibayar'+(win.own?'':` <span style="font-weight:500">· ${dLbl(win.f)}–${dLbl(win.t)}</span>`), fmt(tanpa,0)+'<small>jam</small>',
+          `${fmt(C.schD.TANPA)} hari · ${pct(C.schJ.TANPA,C.otSum,0)} dari semua jam lewat shift${win.own? (covTo<to?` · s/d ${dLbl(covTo)}`:'') : ' · periode terakhir yang data OT/insentif-nya lengkap'}`,
           rate(C.schJ.TANPA, C.otSum), prevCov&&prevCov.otSum ? rate(prevCov.schJ.TANPA, prevCov.otSum) : null, true)
-       : tile('Lewat shift tanpa OT / insentif','–', VI?`Data OT/insentif baru tersedia s/d ${dLbl(viCover)}`:'Data Variable Income belum tersedia', null,null,true));
+       : tile('Kerja lewat shift tidak dibayar','–', VI?`Data OT/insentif baru tersedia s/d ${dLbl(viCover)}`:'Data Variable Income belum tersedia', null,null,true));
 
   renderPains();
 
@@ -751,24 +751,24 @@ function render(){
   mkChart('cRadW',{type:'line',data:{labels:wkL,datasets:wLine(weekly(radRows,r=>r.site,radN,()=>1), weekly(radRows,()=>'_',radN,()=>1))},options:lineOpts('%',{beginAtZero:true})});
   const radIO = s => { const rr = radRows.filter(r=>r.site===s); const raw = rr.length||1;
     return [rr.filter(r=>r._inOut).length/raw*100, rr.filter(r=>r._outOut).length/raw*100]; };
-  legendHtml('lgRadSite', [[SERIES[0],'Absen masuk di luar radius'],[SERIES[1],'Absen pulang di luar radius']]);
+  legendHtml('lgRadSite', [[SERIES[0],'Absen masuk di luar lokasi'],[SERIES[1],'Absen pulang di luar lokasi']]);
   mkChart('cRadSite',{type:'bar',data:{labels:sites,datasets:[0,1].map(i=>({label:i?'Pulang':'Masuk',data:sites.map(s=>+radIO(s)[i].toFixed(1)),
       backgroundColor:SERIES[i],borderRadius:{topLeft:4,topRight:4},borderSkipped:'bottom',maxBarThickness:36}))},
     options:{maintainAspectRatio:false,datasets:{bar:{categoryPercentage:.6,barPercentage:.9}},
-      plugins:{legend:{display:false},tooltip:{...tipBase,callbacks:{label:c=>` ${c.dataset.label} di luar radius: ${fmt(c.parsed.y,1)}%`}}},
+      plugins:{legend:{display:false},tooltip:{...tipBase,callbacks:{label:c=>` ${c.dataset.label} di luar lokasi: ${fmt(c.parsed.y,1)}%`}}},
       scales:{x:{grid:{display:false},border:{color:AXIS}},y:{beginAtZero:true,grid:{color:GRID},border:{display:false},ticks:{callback:v=>v+'%'}}}}});
   const bdef = [['≤−31',-1e9,-30],['−30…−16',-30,-15],['−15…0',-15,0],['1…15',0,15],['16…30',15,30],['31…60',30,60],['61…120',60,1e9]];
   const gaps = rows.filter(r=>r.gap!=null).map(r=>r.gap);
   mkChart('cLate',{type:'bar',data:{labels:bdef.map(b=>b[0]),datasets:[{label:'Hari',data:bdef.map(([l,lo,hi])=>gaps.filter(g=>g>lo&&g<=hi).length),
       backgroundColor:bdef.map(b=>b[1]>=0?SERIES[1]:SERIES[0]),borderRadius:{topLeft:4,topRight:4},borderSkipped:'bottom',maxBarThickness:46}]},
     options:{maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{...tipBase,callbacks:{label:c=>` ${fmt(c.parsed.y)} hari (${pct(c.parsed.y,gaps.length)})`}}},
-      scales:{x:{grid:{display:false},border:{color:AXIS},ticks:{maxRotation:0},title:{display:true,text:'menit dari jam mulai shift'}},y:{grid:{color:GRID},border:{display:false}}}}});
+      scales:{x:{grid:{display:false},border:{color:AXIS},ticks:{maxRotation:0},title:{display:true,text:'menit dari jam mulai shift (minus = datang lebih awal)'}},y:{grid:{color:GRID},border:{display:false}}}}});
   const k2 = (l,v,n) => `<div class="kpi"><div class="lbl">${l}</div><div class="val">${v}</div><div class="note">${n}</div></div>`;
   $('dq').innerHTML =
-    k2('Jadwal tidak terbaca', pct(A.present-A.cmp,A.present), `${fmt(A.present-A.cmp)} hari hadir tidak bisa dicek telat/lewat shift`) +
-    k2('Jadwal aktual ≠ PeoplePro', pct(A.mismatch,A.sched), `${fmt(A.mismatch)} hari`) +
-    k2('Masuk saat jadwal OFF', fmt(A.offWork), `dari ${fmt(A.off)} hari OFF`) +
-    k2('Rata-rata durasi kerja', hhmm(A.durN?A.durSum/A.durN:null), `dari ${fmt(A.durN)} hari dengan jam masuk & pulang`);
+    k2('Jadwal tidak terbaca', pct(A.present-A.cmp,A.present), `${fmt(A.present-A.cmp)} hari masuk tidak bisa dicek telat / pulang lewat shift`) +
+    k2('Jadwal di lapangan beda dengan PeoplePro', pct(A.mismatch,A.sched), `${fmt(A.mismatch)} hari`) +
+    k2('Tetap masuk di hari OFF', fmt(A.offWork), `dari ${fmt(A.off)} hari OFF`) +
+    k2('Rata-rata lama kerja sehari', hhmm(A.durN?A.durSum/A.durN:null), `dari ${fmt(A.durN)} hari yang absen masuk & pulangnya lengkap`);
 
   /* ---- 3 · BEBAN KERJA ---- */
   const durRows = pres.filter(r=>r.dur!=null);
@@ -787,14 +787,14 @@ function render(){
       plugins:{legend:{display:false},tooltip:{...tipBase,callbacks:{label:c=>` ${c.dataset.label}: ${fmt(c.parsed.x,1)}% (${fmt(SA[sites[c.dataIndex]].band[BANDS[c.datasetIndex].k])} hari)`}}},
       scales:{x:{stacked:true,max:100,grid:{color:GRID},border:{display:false},ticks:{callback:v=>v+'%'}},y:{stacked:true,grid:{display:false},border:{color:AXIS}}}}});
 
-  $('viNote').innerHTML = !VI ? 'Data Variable Income belum tersedia — jam lewat shift belum bisa dipecah menurut skema.'
-    : (viCover < to ? `Data OT approved tersedia s/d <b>${dLbl(VI.otUntil)}</b> dan insentif s/d <b>${dLbl(VI.insUntil)}</b> (update Variable Income ${VI.label}). Jam lewat shift setelah ${dLbl(viCover)} belum bisa dipecah menurut skema sampai data Variable Income diperbarui${viCover<from?` — pilih periode s/d ${dLbl(viCover)} untuk melihat pecahannya`:''}.`
+  $('viNote').innerHTML = !VI ? 'Data Variable Income belum tersedia, jadi jam pulang lewat shift belum bisa dicek dibayar atau tidak.'
+    : (viCover < to ? `Data OT approved tersedia s/d <b>${dLbl(VI.otUntil)}</b> dan insentif s/d <b>${dLbl(VI.insUntil)}</b> (update Variable Income ${VI.label}). Jam pulang lewat shift setelah ${dLbl(viCover)} belum bisa dicek dibayar atau tidak sampai data Variable Income diperbarui${viCover<from?` — pilih periode sampai ${dLbl(viCover)} untuk melihat rinciannya`:''}.`
                     : `Data OT approved &amp; insentif dari Variable Income (update ${VI.label}) mencakup seluruh periode ini.`);
   const hasVI = !!VI;
   const anySch = hasVI && (A.schD.OT+A.schD.INS+A.schD.TANPA)>0;
   const dsKeys = anySch ? SCHEMES.filter(k=>A.schD[k]>0) : ['ALL'];
   const colOf = k => k==='ALL' ? SERIES[0] : SCH_COL[k];
-  const lblOf = k => k==='ALL' ? 'Jam lewat shift' : SCH_LBL[k];
+  const lblOf = k => k==='ALL' ? 'Jam pulang lewat shift' : SCH_LBL[k];
   const keyOf = r => anySch ? r.sch : 'ALL';
   const WO = weekly(rows.filter(r=>r.ot>0), keyOf, r=>r.ot, ()=>0);
   legendHtml('lgOT', dsKeys.map(k=>[colOf(k),lblOf(k)]));
@@ -812,10 +812,10 @@ function render(){
   const topT = [...P].filter(p=>p.tanpaJ>0).sort((a,b)=>b.tanpaJ-a.tanpaJ).slice(0,10);
   $('emptyTopT').classList.toggle('hidden', topT.length>0);
   $('emptyTopT').innerHTML = VI ? `Belum bisa dihitung untuk periode ini karena data OT/insentif baru tersedia s/d ${dLbl(VI.cover)}. Pilih periode sampai tanggal itu, atau klik “Buka periode ini” di pain point no. 1.` : 'Data Variable Income belum tersedia.';
-  mkChart('cTopOT',{type:'bar',data:{labels:topT.map(nm),datasets:[{label:'Tanpa OT/insentif',data:topT.map(p=>+(p.tanpaJ/60).toFixed(1)),
+  mkChart('cTopOT',{type:'bar',data:{labels:topT.map(nm),datasets:[{label:'Tidak dibayar',data:topT.map(p=>+(p.tanpaJ/60).toFixed(1)),
       backgroundColor:SCH_COL.TANPA,borderRadius:{topRight:4,bottomRight:4},borderSkipped:'left',maxBarThickness:22}]},
     options:{indexAxis:'y',maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{...tipBase,callbacks:{title:i=>topT[i[0].dataIndex].nama,label:c=>{const p=topT[c.dataIndex];return [` ${fmt(c.parsed.x,1)} jam tanpa OT/insentif`,` ${p.tanpaD} hari · ${p.site} · ${p.job}`];}}}},
+      plugins:{legend:{display:false},tooltip:{...tipBase,callbacks:{title:i=>topT[i[0].dataIndex].nama,label:c=>{const p=topT[c.dataIndex];return [` ${fmt(c.parsed.x,1)} jam tidak dibayar`,` ${p.tanpaD} hari · ${p.site} · ${p.job}`];}}}},
       scales:{x:{beginAtZero:true,grid:{color:GRID},border:{display:false},ticks:{callback:v=>v+' j'}},y:{grid:{display:false},border:{color:AXIS}}}}});
   const topA = [...P].filter(p=>p.ot>0).sort((a,b)=>b.ot-a.ot).slice(0,10);
   legendHtml('lgTopAll', dsKeys.map(k=>[colOf(k),lblOf(k)]));
@@ -853,7 +853,7 @@ function renderHub(rows){
     ${tot?`<td class="num">${fmt(a.abs.CUTI)}</td><td class="num">${fmt(a.abs.SAKIT)}</td><td class="num">${fmt(a.abs.IZIN)}</td><td class="num">${fmt(a.abs.LAINNYA)}</td><td class="num">${fmt(a.abs.ALPA)}</td>`
          :`${heat(a.abs.CUTI,M.CUTI,'42,120,214')}${heat(a.abs.SAKIT,M.SAKIT,'208,59,59')}${heat(a.abs.IZIN,M.IZIN,'237,161,0')}${heat(a.abs.LAINNYA,M.LAINNYA,'137,135,129')}${heat(a.abs.ALPA,M.ALPA,'200,30,30')}`}
     <td class="num">${tot?fmt(rate(a.present,a.sched),2)+'%':rel(rate(a.present,a.sched),attT,false,2,'%',2)}</td></tr>`;
-  $('tHub').innerHTML = `<thead><tr><th>No</th><th class="l">Site</th><th class="l">Facility</th><th>Total karyawan</th><th>Total hari kerja</th><th>Hadir</th><th>Cuti</th><th>Sakit</th><th>Izin</th><th>Tanpa ket.</th><th>Mangkir</th><th>% Hadir</th></tr></thead>
+  $('tHub').innerHTML = `<thead><tr><th>No</th><th class="l">Site</th><th class="l">Facility</th><th>Jumlah orang</th><th>Hari wajib masuk</th><th>Masuk</th><th>Cuti</th><th>Sakit</th><th>Izin</th><th>Tanpa ket.</th><th>Mangkir</th><th>% Kehadiran</th></tr></thead>
     <tbody>${F.map(f=>line(f.site,f.fac,f.a)).join('')}</tbody><tfoot>${line('','',T,true)}</tfoot>`;
 
   // watchlist
@@ -863,13 +863,13 @@ function renderHub(rows){
     (r.status==='SAKIT'?w.S:r.status==='ALPA'?w.M:r.status==='LAINNYA'?w.T:w.I).push(r.date); });
   const list = Object.values(W).map(w=>({...w,tot:w.S.length+w.I.length+w.T.length+w.M.length})).filter(w=>w.tot>=CONFIG.WATCH_MIN || w.M.length>0)
     .sort((a,b)=>b.M.length-a.M.length || b.tot-a.tot);
-  $('wlNote').innerHTML = `Karyawan dengan sakit + izin + tanpa keterangan + mangkir ≥ ${CONFIG.WATCH_MIN} hari, atau ada mangkir, pada periode terpilih · ${fmt(list.length)} orang`;
+  $('wlNote').innerHTML = `Driver yang tidak masuk (sakit, izin, tanpa keterangan, mangkir) ${CONFIG.WATCH_MIN} hari atau lebih, atau pernah mangkir, di periode ini · ${fmt(list.length)} orang`;
   const cnt = (n,cls) => `<td class="num" style="${n?`color:${cls};font-weight:700`:'color:#94a3b8'}">${n}</td>`;
   $('tWatch').innerHTML = `<thead><tr><th>No</th><th class="l">Nama</th><th>NIK</th><th class="l">Site</th><th class="l">Jabatan</th><th>Sakit</th><th>Izin</th><th>Tanpa ket.</th><th>Mangkir</th><th>Total</th><th class="l">Tanggal</th></tr></thead>
     <tbody>${list.length? list.map((w,i)=>`<tr><td>${i+1}</td><td class="l">${w.nama}</td><td class="num">${w.nik}</td><td class="l">${w.site}</td><td class="l">${w.job}</td>
       ${cnt(w.S.length,'#c81e1e')}${cnt(w.I.length,'#b45309')}${cnt(w.T.length,'#475569')}${cnt(w.M.length,'#7f1d1d')}<td class="num"><b>${w.tot}</b></td>
       <td class="dates">${[w.S.length?'Sakit '+compressDates(w.S):'', w.I.length?'Izin '+compressDates(w.I):'', w.T.length?'Tanpa ket. '+compressDates(w.T):'', w.M.length?'<b style="color:#7f1d1d">Mangkir '+compressDates(w.M)+'</b>':''].filter(Boolean).join(' · ')}</td></tr>`).join('')
-      : '<tr><td colspan="11" style="text-align:center;color:var(--ink-2)">Tidak ada karyawan di watchlist pada periode ini</td></tr>'}</tbody>`;
+      : '<tr><td colspan="11" style="text-align:center;color:var(--ink-2)">Tidak ada driver yang perlu dipantau di periode ini</td></tr>'}</tbody>`;
 }
 
 /* ================= PAIN POINTS ================= */
@@ -878,8 +878,8 @@ function renderPains(){
   const worst = (fn, higherBad=true) => sites.map(s=>[s,fn(SA[s])]).filter(x=>x[1]!=null).sort((a,b)=>higherBad?b[1]-a[1]:a[1]-b[1])[0];
   const worse = (cur,prev,higherBad) => cur!=null&&prev!=null&&Math.abs(cur-prev)>=0.05 ? ((higherBad?cur>prev:cur<prev)?1:-1) : 0;
   const clsOf = w => w>0 ? '' : w<0 ? 'ok' : 'flat';
-  const trend = (cur,prev,higherBad) => { if(cur==null||prev==null) return ''; const d=cur-prev; if(Math.abs(d)<0.05) return '<span class="tag">stabil</span>';
-    const w = higherBad?d>0:d<0; return `<span class="tag ${w?'worse':'better'}">${w?'memburuk':'membaik'} ${fmt(Math.abs(d),1)} poin</span>`; };
+  const trend = (cur,prev,higherBad) => { if(cur==null||prev==null) return ''; const d=cur-prev; if(Math.abs(d)<0.05) return '<span class="tag">tetap</span>';
+    const w = higherBad?d>0:d<0; return `<span class="tag ${w?'worse':'better'}">${w?'makin parah':'membaik'} ${fmt(Math.abs(d),1)} poin</span>`; };
   const go = (chip,site,label) => `<button class="go" data-chip="${chip}" data-site="${site||''}">${label} →</button>`;
 
   // 1. lewat shift tanpa skema (pakai jendela yang tercakup data OT/insentif)
@@ -888,21 +888,21 @@ function renderPains(){
     const cov = filtered(win.f, win.t), Pc = people(cov,tol);
     const bySite = uniq(cov.map(r=>r.site)).map(s=>[s,agg(cov.filter(r=>r.site===s),tol).schJ.TANPA]).sort((a,b)=>b[1]-a[1]);
     const n = Pc.filter(p=>p.tanpaD>0).length, n3 = Pc.filter(p=>p.tanpaD>=3).length;
-    out.push({sev:3, title:'Kerja lewat shift tanpa OT / insentif',
-      text:`<b>${fmt(C.schJ.TANPA/60,0)} jam</b> (${fmt(C.schD.TANPA)} hari kerja, ${fmt(n)} orang) pulang ≥ 30 menit setelah shift tapi tidak tercatat OT approved maupun insentif — ${pct(C.schJ.TANPA,C.otSum,0)} dari seluruh jam lewat shift. Terbesar di <b>${bySite[0][0]}</b> (${pct(bySite[0][1],C.schJ.TANPA,0)}). ${fmt(n3)} orang mengalaminya ≥ 3 kali.`
+    out.push({sev:3, title:'Kerja lewat shift tapi tidak dibayar',
+      text:`<b>${fmt(C.schJ.TANPA/60,0)} jam</b> (${fmt(C.schD.TANPA)} hari kerja, ${fmt(n)} orang) driver pulang 30 menit lebih setelah shift selesai, tapi tidak tercatat OT maupun insentif. Ini ${pct(C.schJ.TANPA,C.otSum,0)} dari semua jam pulang lewat shift. Terbesar di <b>${bySite[0][0]}</b> (${pct(bySite[0][1],C.schJ.TANPA,0)}). ${fmt(n3)} orang mengalaminya 3 kali atau lebih.`
         + (win.own ? (win.t<to?` <i>Dihitung s/d ${dLbl(win.t)}.</i>`:'') : ` <i>Periode ${dLbl(win.f)} – ${dLbl(win.t)}: data OT/insentif terakhir yang tersedia.</i>`),
       foot: (win.own ? go('tanpa',bySite[0][0],'Lihat daftar '+bySite[0][0]) : `<span class="tag">data s/d ${dLbl(win.t)}</span><button class="go" data-period="${win.f}|${win.t}" data-chip="tanpa" data-site="${bySite[0][0]}">Buka periode ini →</button>`)});
   }
   if(VI && VI.cover && VI.cover < to){
-    out.push({sev:-1, cls:'info', title:'Data OT / insentif belum update',
-      text:`Dashboard Variable Income terakhir di-update ${VI.label} (OT s/d ${dLbl(VI.otUntil)}, insentif s/d ${dLbl(VI.insUntil)}). Lewat shift setelah tanggal itu belum bisa dicek skemanya — perlu update rutin dari pengelola dashboard Variable Income.`, foot:''});
+    out.push({sev:-1, cls:'info', title:'Data OT / insentif belum diperbarui',
+      text:`Dashboard Variable Income terakhir di-update ${VI.label} (OT s/d ${dLbl(VI.otUntil)}, insentif s/d ${dLbl(VI.insUntil)}). Jam pulang lewat shift setelah tanggal itu belum bisa dicek dibayar atau tidak. Perlu update rutin dari pengelola dashboard Variable Income.`, foot:''});
   }
   // 2. tidak absen pulang
   if(A.noOut>0){
     const w = worst(a=>rate(a.noOut,a.present)); const n3 = P.filter(p=>p.noOut>=3).length;
     const wN = worse(rate(A.noOut,A.present), B&&rate(B.noOut,B.present), true);
-    out.push({sev:1.5+wN, cls:clsOf(wN), title:'Tidak absen pulang',
-      text:`<b>${fmt(A.noOut)} kali</b> (${pct(A.noOut,A.present)} hari hadir) tanpa catatan jam pulang — jam kerja &amp; lewat shift hari itu tidak terukur. Tertinggi di <b>${w[0]}</b> (${fmt(w[1],1)}%). ${fmt(n3)} orang ≥ 3 kali.`,
+    out.push({sev:1.5+wN, cls:clsOf(wN), title:'Lupa absen pulang',
+      text:`<b>${fmt(A.noOut)} kali</b> (${pct(A.noOut,A.present)} dari hari masuk) driver tidak absen pulang, jadi lama kerja dan jam lewat shift hari itu tidak bisa dihitung. Tertinggi di <b>${w[0]}</b> (${fmt(w[1],1)}%). ${fmt(n3)} orang lupa 3 kali atau lebih.`,
       foot: trend(rate(A.noOut,A.present), B&&rate(B.noOut,B.present), true) + go('noout',w[0],'Lihat daftar '+w[0])});
   }
   // mangkir (disiplin, ditonjolkan seperti laporan Hub)
@@ -911,7 +911,7 @@ function renderPains(){
     const names = mk.slice(0,4).map(p=>`<b>${p.nama}</b> (${p.nik}, ${p.site}, ${p.mangkir} hari)`).join(', ');
     const wM = worse(rate(A.abs.ALPA,A.sched), B&&rate(B.abs.ALPA,B.sched), true);
     out.push({sev:2.7+wM, cls:clsOf(wM), title:'Mangkir',
-      text:`<b>${fmt(mk.length)} karyawan – ${fmt(A.abs.ALPA)} hari mangkir</b> (${fmt(rate(A.abs.ALPA,A.sched),2)}% hari kerja). ${names}${mk.length>4?`, dan ${mk.length-4} lainnya`:''}. Perlu pemanggilan / coaching oleh HC.`,
+      text:`<b>${fmt(mk.length)} karyawan – ${fmt(A.abs.ALPA)} hari mangkir</b> (${fmt(rate(A.abs.ALPA,A.sched),2)}% dari hari wajib masuk). ${names}${mk.length>4?`, dan ${mk.length-4} lainnya`:''}. Perlu dipanggil / coaching oleh HC.`,
       foot: trend(rate(A.abs.ALPA,A.sched), B&&rate(B.abs.ALPA,B.sched), true) + go('mangkir','','Lihat daftar mangkir')});
   }
   // 3. kehadiran
@@ -920,7 +920,7 @@ function renderPains(){
     const n = P.filter(p=>p.att!=null && p.att<90).length;
     const wA = worse(rate(A.present,A.sched), B&&rate(B.present,B.sched), false);
     out.push({sev:1+wA, cls:clsOf(wA), title:'Kehadiran',
-      text:`Kehadiran keseluruhan <b>${pct(A.present,A.sched)}</b>. Terendah di <b>${w[0]}</b> (${fmt(w[1],1)}%), terutama karena <b>${ABS_LBL[cause[0]].toLowerCase()}</b> (${pct(cause[1],a.sched-a.present,0)} dari ketidakhadiran di site itu). ${fmt(n)} orang kehadirannya di bawah 90%.`,
+      text:`Kehadiran semua site <b>${pct(A.present,A.sched)}</b>. Terendah di <b>${w[0]}</b> (${fmt(w[1],1)}%), terutama karena <b>${ABS_LBL[cause[0]].toLowerCase()}</b> (${pct(cause[1],a.sched-a.present,0)} dari hari tidak masuk di site itu). ${fmt(n)} orang kehadirannya di bawah 90%.`,
       foot: trend(rate(A.present,A.sched), B&&rate(B.present,B.sched), false) + go('att',w[0],'Lihat daftar '+w[0])});
   }
   // jam kerja > 12 jam (keselamatan)
@@ -930,8 +930,8 @@ function renderPains(){
     const whereL = big[0]===w[0] ? `Tertinggi di <b>${w[0]}</b> (${fmt(w[1],1)}%, ${pct(big[1],A.long12,0)} dari seluruh kasus).`
       : `Persentase tertinggi di <b>${w[0]}</b> (${fmt(w[1],1)}%); jumlah terbanyak di <b>${big[0]}</b> (${pct(big[1],A.long12,0)} dari seluruh kasus).`;
     const wD = worse(rate(A.long12,A.durN), B&&rate(B.long12,B.durN), true);
-    out.push({sev:2.6+wD, cls:clsOf(wD)||'', title:'Jam kerja melewati batas (8 jam + 4 jam lembur)',
-      text:`Dengan normal 8 jam/hari, hanya <b>${pct(A.band.N,A.durN,0)}</b> hari kerja yang ≤ 8 jam; ${pct(A.band.B1,A.durN,0)} lebih ≤ 2 jam, ${pct(A.band.B2,A.durN,0)} lebih 2–4 jam, dan <b>${fmt(A.long12)} hari (${pct(A.long12,A.durN)}) lebih dari 12 jam</b> — melewati batas lembur harian 4 jam, ${fmt(A.long16)} di antaranya > 16 jam. Risiko kelelahan saat mengemudi. ${whereL} ${fmt(n5)} orang ≥ 5 kali.`,
+    out.push({sev:2.6+wD, cls:clsOf(wD)||'', title:'Kerja lebih dari 12 jam sehari (lewat batas 8 jam + lembur 4 jam)',
+      text:`Jam kerja normal 8 jam sehari, tapi hanya <b>${pct(A.band.N,A.durN,0)}</b> hari kerja yang selesai dalam 8 jam. ${pct(A.band.B1,A.durN,0)} lembur sampai 2 jam, ${pct(A.band.B2,A.durN,0)} lembur 2–4 jam, dan <b>${fmt(A.long12)} hari (${pct(A.long12,A.durN)}) kerja lebih dari 12 jam</b>, melewati batas lembur 4 jam sehari, ${fmt(A.long16)} di antaranya > 16 jam. Driver berisiko kelelahan saat menyetir. ${whereL} ${fmt(n5)} orang ≥ 5 kali.`,
       foot: trend(rate(A.long12,A.durN), B&&rate(B.long12,B.durN), true) + go('long',big[0],'Lihat daftar '+big[0])});
   }
   // 4. telat
@@ -939,7 +939,7 @@ function renderPains(){
     const w = worst(a=>rate(a.late,a.cmp)); const n3 = P.filter(p=>p.late>=3).length;
     const wL = worse(rate(A.late,A.cmp), B&&rate(B.late,B.cmp), true);
     out.push({sev:1.2+wL, cls:clsOf(wL), title:'Telat masuk',
-      text:`<b>${fmt(A.late)} kali</b> telat (${pct(A.late,A.cmp)} hari hadir), rata-rata ${fmt(A.lateMin/A.late,0)} menit. Tertinggi di <b>${w[0]}</b> (${fmt(w[1],1)}%). ${fmt(n3)} orang telat ≥ 3 kali.`,
+      text:`<b>${fmt(A.late)} kali</b> telat (${pct(A.late,A.cmp)} dari hari masuk), rata-rata telat ${fmt(A.lateMin/A.late,0)} menit. Tertinggi di <b>${w[0]}</b> (${fmt(w[1],1)}%). ${fmt(n3)} orang telat 3 kali atau lebih.`,
       foot: trend(rate(A.late,A.cmp), B&&rate(B.late,B.cmp), true) + go('late',w[0],'Lihat daftar '+w[0])});
   }
   out.sort((a,b)=>b.sev-a.sev);
@@ -975,7 +975,7 @@ function renderSiteTable(){
     <td class="num">${rel(rate(a.long12,a.durN), ref&&ref.long, true)}</td>
     <td class="num">${rel(rate(a.outRad,a.radN), ref&&ref.rad, true)}</td>
     <td class="num">${fmt(a.offWork)}</td></tr>`; };
-  $('tSite').innerHTML = `<thead><tr><th>Site</th><th>Personel</th><th>Kehadiran</th><th>Hari tidak hadir</th><th>Telat</th><th>Tidak absen pulang</th><th>Rata-rata durasi</th><th>Lewat shift (jam)</th>${VI?'<th>· OT approved</th><th>· Insentif</th><th>· Tanpa OT/insentif</th>':''}<th>Kerja &gt; 8 jam</th><th>Kerja &gt; 12 jam</th><th>Luar radius</th><th>Masuk saat OFF</th></tr></thead>
+  $('tSite').innerHTML = `<thead><tr><th>Site</th><th>Jumlah orang</th><th>Kehadiran</th><th>Hari tidak masuk</th><th>Telat</th><th>Lupa absen pulang</th><th>Rata-rata lama kerja</th><th>Jam lewat shift</th>${VI?'<th>· dibayar OT</th><th>· dapat insentif</th><th>· tidak dibayar</th>':''}<th>Kerja &gt; 8 jam</th><th>Kerja &gt; 12 jam</th><th>Absen di luar lokasi</th><th>Masuk di hari OFF</th></tr></thead>
     <tbody>${sites.map(s=>line(s,SA[s])).join('')}</tbody><tfoot>${line('Total',A,true)}</tfoot>`;
 }
 
@@ -983,14 +983,14 @@ function renderSiteTable(){
 let PERSON = [], TBL = {chip:'all', site:''}, sortKey='', sortAsc=false;
 const CHIPS = [
   ['all','Semua', p=>true, 'nama', true],
-  ['tanpa','Lewat shift tanpa OT/insentif', p=>p.tanpaD>0, 'tanpaJ', false],
-  ['noout','Tidak absen pulang ≥ 3x', p=>p.noOut>=3, 'noOut', false],
+  ['tanpa','Lewat shift tidak dibayar', p=>p.tanpaD>0, 'tanpaJ', false],
+  ['noout','Lupa absen pulang ≥ 3x', p=>p.noOut>=3, 'noOut', false],
   ['late','Telat ≥ 3x', p=>p.late>=3, 'late', false],
   ['mangkir','Mangkir', p=>p.mangkir>0, 'mangkir', false],
-  ['watch','Watchlist (sakit+izin+mangkir ≥ 4)', p=>p.sakit+p.izin+p.mangkir>=CONFIG.WATCH_MIN, 'absent', false],
+  ['watch','Sering tidak masuk (≥ 4 hari)', p=>p.sakit+p.izin+p.mangkir>=CONFIG.WATCH_MIN, 'absent', false],
   ['att','Kehadiran < 90%', p=>p.att!=null&&p.att<90, 'att', true],
   ['long','Kerja > 12 jam ≥ 5x', p=>p.long12>=5, 'long12', false],
-  ['off','Masuk saat OFF', p=>p.offWork>0, 'offWork', false],
+  ['off','Masuk di hari OFF', p=>p.offWork>0, 'offWork', false],
 ];
 function renderChips(){
   const base = PERSON.filter(p=>!TBL.site||p.site===TBL.site);
@@ -1001,19 +1001,19 @@ function renderChips(){
 }
 const PCOLS = [
   ['nama','Nama','l',p=>`${p.nama}<div style="font-size:11px;color:var(--muted)">${p.nik}</div>`],
-  ['site','Site','l'],['job','Jobdesk','l'],
+  ['site','Site','l'],['job','Jabatan','l'],
   ['att','Kehadiran',null,p=>p.att==null?'–':rel(p.att, CUR&&rate(CUR.A.present,CUR.A.sched), false, 1, '%', 5)],
-  ['absent','Tidak hadir',null,p=>p.absent?`${p.absent}<div style="font-size:11px;color:var(--muted)">S${p.sakit} · C${p.cuti} · I${p.izin} · M${p.mangkir}</div>`:'0'],
+  ['absent','Tidak masuk',null,p=>p.absent?`${p.absent}<div style="font-size:11px;color:var(--muted)">S${p.sakit} · C${p.cuti} · I${p.izin} · M${p.mangkir}</div>`:'0'],
   ['late','Telat (kali)'],['lateAvg','Rata-rata telat',null,p=>p.lateAvg==null?'–':fmt(p.lateAvg,0)+' mnt'],
-  ['noOut','Tidak absen pulang'],
-  ['dur','Rata-rata durasi',null,p=>hhmm(p.dur)],
-  ['ot','Lewat shift (jam)',null,p=>fmt(p.ot/60,1)],
-  ['tanpaJ','Tanpa OT/insentif (jam)',null,p=>p.tanpaJ?`${fmt(p.tanpaJ/60,1)}<div style="font-size:11px;color:var(--muted)">${p.tanpaD} hari</div>`:'0'],
-  ['viOTh','OT approved (jam)',null,p=>fmt(p.viOTh,1)],['insD','Hari insentif'],
+  ['noOut','Lupa absen pulang'],
+  ['dur','Rata-rata lama kerja',null,p=>hhmm(p.dur)],
+  ['ot','Jam lewat shift',null,p=>fmt(p.ot/60,1)],
+  ['tanpaJ','Lewat shift tidak dibayar (jam)',null,p=>p.tanpaJ?`${fmt(p.tanpaJ/60,1)}<div style="font-size:11px;color:var(--muted)">${p.tanpaD} hari</div>`:'0'],
+  ['viOTh','Dibayar OT (jam)',null,p=>fmt(p.viOTh,1)],['insD','Hari dapat insentif'],
   ['over8','Kerja > 8 jam (hari)',null,p=>p.over8?`${p.over8}<div style="font-size:11px;color:var(--muted)">8–10j ${p.band.B1} · 10–12j ${p.band.B2}</div>`:'0'],
   ['long12','Kerja > 12 jam (hari)',null,p=>p.long12?`${p.long12}<div style="font-size:11px;color:var(--muted)">maks ${hhmm(p.maxDur)}</div>`:'0'],
-  ['outRadPct','Luar radius',null,p=>p.outRadPct==null?'–':`${fmt(p.outRadPct,0)}%<div style="font-size:11px;color:var(--muted)">${p.outRad} dari ${p.radN} hari</div>`],
-  ['offWork','Masuk saat OFF'],
+  ['outRadPct','Absen di luar lokasi',null,p=>p.outRadPct==null?'–':`${fmt(p.outRadPct,0)}%<div style="font-size:11px;color:var(--muted)">${p.outRad} dari ${p.radN} hari</div>`],
+  ['offWork','Masuk di hari OFF'],
 ];
 function renderPersonTable(){
   const q=$('q').value.trim().toLowerCase();
@@ -1023,13 +1023,13 @@ function renderPersonTable(){
   let list = PERSON.filter(p=>(!TBL.site||p.site===TBL.site) && chip[2](p) && (!q||p.nama.toLowerCase().includes(q)||p.nik.toLowerCase().includes(q)));
   list.sort((a,b)=>{ let x=a[key],y=b[key]; if(x==null) x=asc?1e9:-1e9; if(y==null) y=asc?1e9:-1e9;
     const c = typeof x==='string' ? x.localeCompare(y) : x-y; return asc?c:-c; });
-  $('pCount').textContent = `${fmt(list.length)} personel`;
+  $('pCount').textContent = `${fmt(list.length)} orang`;
   $('tPerson').innerHTML = `<thead><tr>${cols.map(([k,l,a])=>`<th data-k="${k}" class="${a||''} ${k===key?'sorted'+(asc?' asc':''):''}">${l}</th>`).join('')}</tr></thead>
     <tbody>${list.map(p=>`<tr>${cols.map(([k,l,a,f])=>`<td class="${a?'l':'num'}">${f?f(p):(typeof p[k]==='number'?fmt(p[k]):p[k])}</td>`).join('')}</tr>`).join('')}</tbody>`;
   $('tPerson').querySelectorAll('th').forEach(th=>th.onclick=()=>{ const k=th.dataset.k; if(key===k) {sortKey=k; sortAsc=!asc;} else {sortKey=k; sortAsc=['nama','site','job','att'].includes(k);} renderPersonTable(); });
 }
 function downloadCsv(){
-  const head=['NIK','Nama','Site','Facility','Jobdesk','Hari terjadwal','Hadir','Kehadiran %','Sakit','Cuti','Izin/Mangkir','Telat (kali)','% Telat','Rata-rata telat (mnt)','Tidak absen pulang','Jadwal beda PeoplePro','Rata-rata durasi (jam)','Lewat shift (jam)','Hari lewat shift','OT approved (jam)','Hari insentif','Tanpa OT/insentif (jam)','Hari tanpa OT/insentif','Kerja ≤ 8 jam (hari)','Kerja 8–10 jam (hari)','Kerja 10–12 jam (hari)','Kerja > 12 jam (hari)','Durasi terlama (jam)','Luar radius (hari)','Luar radius %','Masuk saat OFF'];
+  const head=['NIK','Nama','Site','Facility','Jabatan','Hari wajib masuk','Masuk','Kehadiran %','Sakit','Cuti','Izin/Mangkir','Telat (kali)','% Telat','Rata-rata telat (mnt)','Lupa absen pulang','Jadwal beda PeoplePro','Rata-rata lama kerja (jam)','Jam lewat shift','Hari lewat shift','Dibayar OT (jam)','Hari dapat insentif','Lewat shift tidak dibayar (jam)','Hari lewat shift tidak dibayar','Kerja ≤ 8 jam (hari)','Kerja 8–10 jam (hari)','Kerja 10–12 jam (hari)','Kerja > 12 jam (hari)','Kerja terlama (jam)','Absen di luar lokasi (hari)','Absen di luar lokasi %','Masuk di hari OFF'];
   const r1=v=>v==null?'':Math.round(v*10)/10;
   const list = PERSON.filter(p=>(!TBL.site||p.site===TBL.site) && (CHIPS.find(c=>c[0]===TBL.chip)||CHIPS[0])[2](p));
   const lines=list.map(p=>[p.nik,p.nama,p.site,p.fac,p.job,p.sched,p.present,r1(p.att),p.sakit,p.cuti,p.alpa,p.late,r1(p.latePct),r1(p.lateAvg),p.noOut,p.mismatch,r1(p.dur/60),r1(p.ot/60),p.otDays,r1(p.viOTh),p.insD,r1(p.tanpaJ/60),p.tanpaD,p.band.N,p.band.B1,p.band.B2,p.long12,r1(p.maxDur/60),p.outRad,r1(p.outRadPct),p.offWork]);
@@ -1068,9 +1068,9 @@ function people(rows,tol){
 /* ================= LOAD ================= */
 /* ================= SIKLUS LUAR KOTA ================= */
 let TRIPS = [], LK = {chip:'all', q:'', sort:'risk', asc:false};
-const LK_BEF = [['OFF','OFF / istirahat','#1baf7a'],['K','Kerja ≤ 12 jam','#86b6ef'],['K12','Kerja > 12 jam','#b8401a'],['ABS','Tidak hadir','#c3c2b7']];
-const LK_AFT = [['OFF','OFF / istirahat','#1baf7a'],['K','Langsung kerja ≤ 12 jam','#86b6ef'],['K12','Langsung kerja > 12 jam','#b8401a'],['ABS','Tidak hadir','#c3c2b7']];
-const LK_LBL = {OFF:'OFF',K:'Kerja',K12:'Kerja > 12 j',ABS:'Tidak hadir',NA:'–'};
+const LK_BEF = [['OFF','Istirahat (OFF)','#1baf7a'],['K','Kerja ≤ 12 jam','#86b6ef'],['K12','Kerja > 12 jam','#b8401a'],['ABS','Tidak masuk','#c3c2b7']];
+const LK_AFT = [['OFF','Istirahat (OFF)','#1baf7a'],['K','Langsung kerja ≤ 12 jam','#86b6ef'],['K12','Langsung kerja > 12 jam','#b8401a'],['ABS','Tidak masuk','#c3c2b7']];
+const LK_LBL = {OFF:'Istirahat (OFF)',K:'Kerja',K12:'Kerja > 12 jam',ABS:'Tidak masuk',NA:'–'};
 function buildTrips(){
   // satu baris per orang per tanggal (baris pertama dipakai bila dobel)
   const day = new Map(), rng = {};
@@ -1091,9 +1091,9 @@ function buildTrips(){
       if(t.end>=g.max){ t.aft='NA'; t.rec=null; }
       else { t.aft = dayCls(day.get(k0+addDays(t.end,1))); let n=0; while(dayCls(day.get(k0+addDays(t.end,1+n)))==='OFF') n++; t.rec = t.aft==='NA'?null:n; }
       t.risk = [];
-      if(t.bef==='K12') t.risk.push('Berangkat setelah kerja > 12 j');
-      if(t.aft==='K12') t.risk.push('Setelah pulang kerja > 12 j');
-      if(t.days>=CONFIG.LK_LONG_TRIP && (t.aft==='K' || t.aft==='K12')) t.risk.push(`Trip ${t.days} hari tanpa OFF setelahnya`);
+      if(t.bef==='K12') t.risk.push('Sehari sebelum berangkat kerja > 12 jam');
+      if(t.aft==='K12') t.risk.push('Besoknya setelah pulang kerja > 12 jam');
+      if(t.days>=CONFIG.LK_LONG_TRIP && (t.aft==='K' || t.aft==='K12')) t.risk.push(`Perjalanan ${t.days} hari, besoknya tidak dapat OFF`);
       Object.assign(t,{site:s.site,nik:s.nik,nama:s.nama,job:s.job,fac:s.fac}); delete t.rows; TRIPS.push(t);
     };
     list.forEach(r=>{ if(cur && dayDiff(cur.rows[cur.rows.length-1].date, r.date)===1) cur.rows.push(r); else { if(cur) close(cur); cur={rows:[r]}; } });
@@ -1115,22 +1115,22 @@ function renderTrips(){
   const P = v => v==null ? '–' : fmt(v,0)+'%';
   const r = (a,b) => b ? a/b*100 : null;
   if(!ts.length){
-    $('lkSum').innerHTML = `<div class="tile" style="grid-column:1/-1"><div class="n">Tidak ada trip luar kota (status Perdin) pada periode &amp; filter ini.</div></div>`;
+    $('lkSum').innerHTML = `<div class="tile" style="grid-column:1/-1"><div class="n">Tidak ada perjalanan luar kota (status Perdin) di periode &amp; filter ini.</div></div>`;
     ['cLkBA','cLkLen'].forEach(id=>{ if(charts[id]){ charts[id].destroy(); delete charts[id]; } });
     $('tLkSite').innerHTML=''; $('tLkDrv').innerHTML=''; $('tLkTrip').innerHTML=''; $('lkNote').textContent=''; $('lkChips').innerHTML=''; $('lkCount').textContent=''; return;
   }
   $('lkSum').innerHTML = [
-    tile('Trip luar kota', `${fmt(S.n)}<small>trip</small>`, `${fmt(S.drv)} driver/asst · rata-rata ${fmt(S.days/S.n,1)} hari · terpanjang ${fmt(S.max)} hari`, null,null,null),
-    tile('Berangkat setelah kerja > 12 jam', P(r(S.b.K12,S.bN)), `${fmt(S.b.K12)} dari ${fmt(S.bN)} trip · H-1 OFF hanya ${P(r(S.b.OFF,S.bN))}`, null,null,null),
-    tile('Dapat OFF setelah pulang', P(r(S.a.OFF,S.aN)), `${fmt(S.a.OFF)} dari ${fmt(S.aN)} trip · langsung kerja ${P(r(S.a.K+S.a.K12,S.aN))}`, null,null,null),
-    tile('Trip berisiko', P(r(S.risk,S.n)), `${fmt(S.risk)} trip · absen pulang saat perdin ${P(r(S.out,S.days))}`, null,null,null),
+    tile('Perjalanan luar kota', `${fmt(S.n)}<small>trip</small>`, `oleh ${fmt(S.drv)} driver/asst · rata-rata ${fmt(S.days/S.n,1)} hari per trip · terlama ${fmt(S.max)} hari`, null,null,null),
+    tile('Berangkat dalam kondisi capek', P(r(S.b.K12,S.bN)), `${fmt(S.b.K12)} dari ${fmt(S.bN)} trip, sehari sebelumnya kerja > 12 jam · yang istirahat dulu hanya ${P(r(S.b.OFF,S.bN))}`, null,null,null),
+    tile('Dapat istirahat setelah pulang', P(r(S.a.OFF,S.aN)), `${fmt(S.a.OFF)} dari ${fmt(S.aN)} trip besoknya OFF · ${P(r(S.a.K+S.a.K12,S.aN))} langsung kerja lagi`, null,null,null),
+    tile('Perjalanan berisiko', P(r(S.risk,S.n)), `${fmt(S.risk)} trip · yang absen pulang saat perdin hanya ${P(r(S.out,S.days))}`, null,null,null),
   ].join('');
 
   // sebelum vs sesudah (100% stacked)
   const keys = ['OFF','K','K12','ABS'];
-  legendHtml('lgLkBA', LK_AFT.map(([k,l,c])=>[c, k==='K'?'Kerja ≤ 12 jam':k==='K12'?'Kerja > 12 jam':l]));
-  mkChart('cLkBA',{type:'bar',data:{labels:['Sebelum berangkat (H-1)','Setelah pulang (H+1)'],
-    datasets:keys.map((k,i)=>({label:LK_AFT[i][0]==='K'?'Kerja ≤ 12 jam':LK_AFT[i][0]==='K12'?'Kerja > 12 jam':LK_AFT[i][1], backgroundColor:LK_AFT[i][2],
+  legendHtml('lgLkBA', LK_BEF.map(([k,l,c])=>[c,l]));
+  mkChart('cLkBA',{type:'bar',data:{labels:['Sehari sebelum berangkat','Sehari setelah pulang'],
+    datasets:keys.map((k,i)=>({label:LK_BEF[i][1], backgroundColor:LK_BEF[i][2],
       data:[r(S.b[k],S.bN), r(S.a[k],S.aN)], _n:[S.b[k],S.a[k]]}))},
     options:{indexAxis:'y',maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{...tipBase,callbacks:{label:c=>` ${c.dataset.label}: ${fmt(c.parsed.x,1)}% (${fmt(c.dataset._n[c.dataIndex])} trip)`}}},
       scales:{x:{stacked:true,max:100,grid:{color:GRID},border:{display:false},ticks:{callback:v=>v+'%'}},y:{stacked:true,grid:{display:false},border:{color:AXIS}}}}});
@@ -1138,8 +1138,8 @@ function renderTrips(){
   // lama trip vs OFF setelah pulang
   const B = [['1 hari',1,1],['2 hari',2,2],['3–4 hari',3,4],['≥ 5 hari',5,99]].map(([l,lo,hi])=>{
     const x = ts.filter(t=>t.days>=lo&&t.days<=hi&&t.aft!=='NA'); return {l, n:x.length, off:x.filter(t=>t.aft==='OFF').length}; });
-  mkChart('cLkLen',{type:'bar',data:{labels:B.map(b=>b.l),datasets:[{label:'Dapat OFF di H+1',data:B.map(b=>r(b.off,b.n)),backgroundColor:'#1baf7a',borderRadius:4,_b:B}]},
-    options:{maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{...tipBase,callbacks:{label:c=>{const b=c.dataset._b[c.dataIndex]; return ` Dapat OFF: ${fmt(c.parsed.y,0)}% (${fmt(b.off)} dari ${fmt(b.n)} trip)`;}}}},
+  mkChart('cLkLen',{type:'bar',data:{labels:B.map(b=>b.l),datasets:[{label:'Besoknya dapat OFF',data:B.map(b=>r(b.off,b.n)),backgroundColor:'#1baf7a',borderRadius:4,_b:B}]},
+    options:{maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{...tipBase,callbacks:{label:c=>{const b=c.dataset._b[c.dataIndex]; return ` Besoknya dapat OFF: ${fmt(c.parsed.y,0)}% (${fmt(b.off)} dari ${fmt(b.n)} trip)`;}}}},
       scales:{x:{grid:{display:false},border:{color:AXIS}},y:{max:100,grid:{color:GRID},border:{display:false},ticks:{callback:v=>v+'%'}}}}});
 
   // per site
@@ -1148,7 +1148,7 @@ function renderTrips(){
       b12:r(X.b.K12,X.bN), boff:r(X.b.OFF,X.bN), aoff:r(X.a.OFF,X.aN), a12:r(X.a.K12,X.aN), risk:r(X.risk,X.n), out:r(X.out,X.days)};
     const c = (k,hb) => tot ? `<td class="num">${P(v[k])}</td>` : `<td class="num">${rel(v[k], ({b12:r(S.b.K12,S.bN),boff:r(S.b.OFF,S.bN),aoff:r(S.a.OFF,S.aN),a12:r(S.a.K12,S.aN),risk:r(S.risk,S.n),out:r(S.out,S.days)})[k], hb, 0)}</td>`;
     return `<tr><td class="l">${lbl}</td><td class="num">${fmt(X.n)}</td><td class="num">${fmt(X.drv)}</td><td class="num">${fmt(X.days/X.n,1)}</td><td class="num">${fmt(X.max)}</td>${c('boff',false)}${c('b12',true)}${c('aoff',false)}${c('a12',true)}${c('risk',true)}${c('out',false)}</tr>`; };
-  $('tLkSite').innerHTML = `<thead><tr><th class="l">Site</th><th>Trip</th><th>Driver/asst</th><th>Rata-rata lama (hari)</th><th>Terpanjang</th><th>H-1 OFF</th><th>H-1 kerja &gt; 12 j</th><th>H+1 OFF</th><th>H+1 kerja &gt; 12 j</th><th>Trip berisiko</th><th>Absen pulang saat perdin</th></tr></thead>
+  $('tLkSite').innerHTML = `<thead><tr><th class="l">Site</th><th>Trip</th><th>Driver/asst</th><th>Rata-rata lama (hari)</th><th>Terlama (hari)</th><th>Istirahat sebelum berangkat</th><th>Kerja &gt; 12 j sebelum berangkat</th><th>Istirahat setelah pulang</th><th>Kerja &gt; 12 j setelah pulang</th><th>Trip berisiko</th><th>Absen pulang saat perdin</th></tr></thead>
     <tbody>${sites.map(s=>row(s,lkStats(ts.filter(t=>t.site===s)),false)).join('')}</tbody>
     <tfoot>${row('Semua site',S,true)}</tfoot>`;
 
@@ -1159,20 +1159,20 @@ function renderTrips(){
     if(t.bef==='K12') d.b12++; if(t.aft!=='NA'){ d.aN++; if(t.aft==='OFF') d.aOff++; else if(t.aft!=='ABS') d.noRest++; } });
   LK.all = Object.values(D);
   LK.trips = ts;
-  $('lkNote').innerHTML = `${fmt(LK.all.length)} driver/asst dengan trip luar kota di periode ini · <b>${fmt(LK.all.filter(d=>d.risk>0).length)}</b> orang punya minimal 1 trip berisiko`;
+  $('lkNote').innerHTML = `${fmt(LK.all.length)} driver/asst berangkat luar kota di periode ini · <b>${fmt(LK.all.filter(d=>d.risk>0).length)}</b> orang pernah mengalami perjalanan berisiko`;
   renderLkTable();
 }
 function renderLkTable(){
   if(!LK.all) return;
   const nRisk = LK.all.filter(d=>d.risk>0).length, nFreq = LK.all.filter(d=>d.trip>=4).length;
-  $('lkChips').innerHTML = [['all','Semua',LK.all.length],['risk','Ada trip berisiko',nRisk],['freq','Sering luar kota (≥ 4 trip)',nFreq]]
+  $('lkChips').innerHTML = [['all','Semua',LK.all.length],['risk','Pernah perjalanan berisiko',nRisk],['freq','Sering luar kota (≥ 4 trip)',nFreq]]
     .map(([k,l,c])=>`<button class="chip ${LK.chip===k?'on':''}" data-k="${k}">${l}<span class="c">${fmt(c)}</span></button>`).join('');
   $('lkChips').querySelectorAll('.chip').forEach(b=>b.onclick=()=>{ LK.chip=b.dataset.k; renderLkTable(); });
   const q = LK.q.toLowerCase();
   const match = d => !q || d.nama.toLowerCase().includes(q) || String(d.nik).toLowerCase().includes(q);
   let list = LK.all.filter(d=>(LK.chip==='all'||(LK.chip==='risk'?d.risk>0:d.trip>=4)) && match(d));
-  const cols = [['nama','Nama','l'],['nik','NIK','l'],['site','Site','l'],['job','Jobdesk','l'],['trip','Trip'],['days','Hari perdin'],['avg','Rata-rata lama'],['max','Terpanjang'],
-    ['b12','Berangkat stl kerja > 12 j'],['noRest','Langsung kerja stl pulang'],['risk','Trip berisiko'],['why','Penyebab','l']];
+  const cols = [['nama','Nama','l'],['nik','NIK','l'],['site','Site','l'],['job','Jabatan','l'],['trip','Jumlah trip'],['days','Total hari perdin'],['avg','Rata-rata hari per trip'],['max','Terlama (hari)'],
+    ['b12','Berangkat setelah kerja > 12 j'],['noRest','Langsung kerja setelah pulang'],['risk','Trip berisiko'],['why','Penyebab','l']];
   list.forEach(d=>{ d.avg=d.days/d.trip; d.why=Object.entries(d.reasons).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`${k} (${v})`).join(' · '); });
   const k=LK.sort; list.sort((a,b)=>{ const x=a[k],y=b[k]; const c = typeof x==='string' ? x.localeCompare(y) : (x-y); return LK.asc?c:-c || b.trip-a.trip; });
   $('lkCount').textContent = `${fmt(list.length)} orang`;
@@ -1183,7 +1183,7 @@ function renderLkTable(){
   // detail trip
   const keys = new Set(list.map(d=>d.site+'|'+d.nik));
   const tl = LK.trips.filter(t=>keys.has(t.site+'|'+t.nik)).sort((a,b)=>a.nama.localeCompare(b.nama) || (a.start<b.start?-1:1));
-  $('tLkTrip').innerHTML = `<thead><tr><th class="l">Nama</th><th class="l">Site</th><th class="l">Berangkat</th><th class="l">Pulang</th><th>Lama (hari)</th><th class="l">H-1</th><th class="l">H+1</th><th>OFF setelah pulang</th><th>Absen pulang saat perdin</th><th class="l">Catatan</th></tr></thead><tbody>${
+  $('tLkTrip').innerHTML = `<thead><tr><th class="l">Nama</th><th class="l">Site</th><th class="l">Berangkat</th><th class="l">Pulang</th><th>Lama (hari)</th><th class="l">Sehari sebelum berangkat</th><th class="l">Sehari setelah pulang</th><th>Libur setelah pulang</th><th>Absen pulang saat perdin</th><th class="l">Catatan</th></tr></thead><tbody>${
     tl.map(t=>`<tr${t.risk.length?' style="background:#fff5f5"':''}><td class="l">${t.nama}</td><td class="l">${t.site}</td><td class="l">${dLbl(t.start)}</td><td class="l">${dLbl(t.end)}</td><td class="num">${t.days}</td><td class="l">${LK_LBL[t.bef]}</td><td class="l">${LK_LBL[t.aft]}</td><td class="num">${t.rec==null?'–':t.rec+' hari'}</td><td class="num">${t.outOk}/${t.days}</td><td class="l dates">${t.risk.join(' · ')}</td></tr>`).join('')}</tbody>`;
 }
 function downloadLkCsv(){
