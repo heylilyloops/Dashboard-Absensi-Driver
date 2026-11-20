@@ -1,16 +1,16 @@
 {
-  "updated_at": "2026-11-19T12:10+07:00",
+  "updated_at": "2026-11-20T11:58+07:00",
   "files": {
-    "NDC_JABABEKA.csv": 23889,
+    "NDC_JABABEKA.csv": 31265,
     "NDC_CIKUPA.csv": 9089,
     "NDC_SIDOARJO.csv": 6649,
-    "RDC_TALLO.csv": 2313
+    "RDC_TALLO.csv": 2363
   },
   "variable_income": {
     "status": "ok",
-    "update_label": "28 Okt 2026",
-    "ot_until": "2026-10-15",
-    "insentif_until": "2026-10-25",
-    "rows": 8992
+    "update_label": "20 Nov 2026",
+    "ot_until": "2026-11-15",
+    "insentif_until": "2026-11-18",
+    "rows": 13650
   }
 }
