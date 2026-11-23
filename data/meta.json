@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-11-23T09:56+07:00",
+  "updated_at": "2026-11-23T09:57+07:00",
   "files": {
     "NDC_JABABEKA.csv": 31265,
     "NDC_CIKUPA.csv": 12890,
@@ -18,22 +18,8 @@
     "tabs": {
       "HCI JABABEKA": {
         "rows": 30416,
-        "kept": 0,
-        "missing_cols": [
-          "TRANSNO",
-          "DATE",
-          "NOPOL",
-          "ARMADA",
-          "PENGIRIMAN",
-          "AREA",
-          "RITASE",
-          "STATUS",
-          "DRIVER_NAME",
-          "CREW1_NAME",
-          "CHECKOUT",
-          "TIBA_DC",
-          "TOTAL_DO"
-        ],
+        "kept": 7673,
+        "missing_cols": [],
         "header_row": 1,
         "header": [
           "LC",
@@ -81,27 +67,13 @@
           "",
           "Sizing Armada"
         ],
-        "date_min": "",
-        "date_max": ""
+        "date_min": "2026-09-01",
+        "date_max": "2026-11-22"
       },
       "AHI JABABEKA": {
         "rows": 32022,
-        "kept": 0,
-        "missing_cols": [
-          "TRANSNO",
-          "DATE",
-          "NOPOL",
-          "ARMADA",
-          "PENGIRIMAN",
-          "AREA",
-          "RITASE",
-          "STATUS",
-          "DRIVER_NAME",
-          "CREW1_NAME",
-          "CHECKOUT",
-          "TIBA_DC",
-          "TOTAL_DO"
-        ],
+        "kept": 8585,
+        "missing_cols": [],
         "header_row": 1,
         "header": [
           "LC",
@@ -151,26 +123,14 @@
           "Shipping Line",
           "LC TYPE"
         ],
-        "date_min": "",
-        "date_max": ""
+        "date_min": "2026-09-01",
+        "date_max": "2026-11-22"
       },
       "KLS JABABEKA": {
-        "rows": 9452,
-        "kept": 0,
+        "rows": 9501,
+        "kept": 2598,
         "missing_cols": [
-          "TRANSNO",
-          "DATE",
-          "NOPOL",
-          "ARMADA",
-          "PENGIRIMAN",
-          "AREA",
-          "RITASE",
-          "STATUS",
-          "DRIVER_NAME",
-          "CREW1_NAME",
-          "CHECKOUT",
-          "TIBA_DC",
-          "TOTAL_DO"
+          "OLF"
         ],
         "header_row": 1,
         "header": [
@@ -212,27 +172,13 @@
           "SLA Check In",
           "Sizing Armada"
         ],
-        "date_min": "",
-        "date_max": ""
+        "date_min": "2026-09-01",
+        "date_max": "2026-11-21"
       },
       "HCI CIKUPA": {
-        "rows": 20657,
-        "kept": 0,
-        "missing_cols": [
-          "TRANSNO",
-          "DATE",
-          "NOPOL",
-          "ARMADA",
-          "PENGIRIMAN",
-          "AREA",
-          "RITASE",
-          "STATUS",
-          "DRIVER_NAME",
-          "CREW1_NAME",
-          "CHECKOUT",
-          "TIBA_DC",
-          "TOTAL_DO"
-        ],
+        "rows": 21293,
+        "kept": 5839,
+        "missing_cols": [],
         "header_row": 1,
         "header": [
           "LC",
@@ -256,13 +202,13 @@
           "Jenis Armada",
           "Type",
           "Key",
-          "Shipment\nArea",
+          "Shipment Area",
           "Cost Ext",
           "Gap Cost Int - Ext",
           "% Saving",
           "Month",
           "Kategori",
-          "OLF\nDETERMINE",
+          "OLF DETERMINE",
           "SATELITE",
           "TAT",
           "Prof Fee",
@@ -280,27 +226,13 @@
           "Help Day",
           "SLA Check In"
         ],
-        "date_min": "",
-        "date_max": ""
+        "date_min": "2026-09-01",
+        "date_max": "2026-11-22"
       },
       "CORP SIDOARJO": {
         "rows": 15581,
-        "kept": 0,
-        "missing_cols": [
-          "TRANSNO",
-          "DATE",
-          "NOPOL",
-          "ARMADA",
-          "PENGIRIMAN",
-          "AREA",
-          "RITASE",
-          "STATUS",
-          "DRIVER_NAME",
-          "CREW1_NAME",
-          "CHECKOUT",
-          "TIBA_DC",
-          "TOTAL_DO"
-        ],
+        "kept": 3912,
+        "missing_cols": [],
         "header_row": 1,
         "header": [
           "LC",
@@ -347,27 +279,13 @@
           "Help Day",
           "SLA Check In"
         ],
-        "date_min": "",
-        "date_max": ""
+        "date_min": "2026-09-01",
+        "date_max": "2026-11-22"
       },
       "CORP TALLO": {
-        "rows": 7569,
-        "kept": 0,
-        "missing_cols": [
-          "TRANSNO",
-          "DATE",
-          "NOPOL",
-          "ARMADA",
-          "PENGIRIMAN",
-          "AREA",
-          "RITASE",
-          "STATUS",
-          "DRIVER_NAME",
-          "CREW1_NAME",
-          "CHECKOUT",
-          "TIBA_DC",
-          "TOTAL_DO"
-        ],
+        "rows": 18062,
+        "kept": 1868,
+        "missing_cols": [],
         "header_row": 1,
         "header": [
           "LC",
@@ -414,27 +332,13 @@
           "Help Day",
           "SLA Check In"
         ],
-        "date_min": "",
-        "date_max": ""
+        "date_min": "2026-09-01",
+        "date_max": "2026-11-22"
       },
       "CORP TAMORA": {
-        "rows": 10013,
-        "kept": 0,
-        "missing_cols": [
-          "TRANSNO",
-          "DATE",
-          "NOPOL",
-          "ARMADA",
-          "PENGIRIMAN",
-          "AREA",
-          "RITASE",
-          "STATUS",
-          "DRIVER_NAME",
-          "CREW1_NAME",
-          "CHECKOUT",
-          "TIBA_DC",
-          "TOTAL_DO"
-        ],
+        "rows": 20533,
+        "kept": 2595,
+        "missing_cols": [],
         "header_row": 1,
         "header": [
           "LC",
@@ -481,11 +385,11 @@
           "Help Day",
           "SLA Check In"
         ],
-        "date_min": "",
-        "date_max": ""
+        "date_min": "2026-09-01",
+        "date_max": "2026-11-22"
       }
     },
     "errors": [],
-    "rows": 0
+    "rows": 33056
   }
 }
