@@ -228,6 +228,7 @@ def main():
         print(f"OK {fname}: {len(df)} baris")
 
     meta["variable_income"] = sync_variable_income(all_niks, min_date)
+    meta["lc"] = sync_lc(gc, min_date)
 
     with open("data/meta.json", "w") as f:
         json.dump(meta, f, indent=2)
@@ -293,6 +294,102 @@ def sync_variable_income(niks=None, min_date=""):
     print(f"OK VI_DAILY.csv: {len(out)} baris, OT s/d {info['ot_until']}, insentif s/d {info['insentif_until']}")
     return info
 
+
+
+# ── Data LC pengiriman (MASTER LC NDC-RDC 2026) -> data/LC.csv ──
+LC_ID = "1wumoDA8SrXmaEXRkI_2lNlvof9JVtsXceeE2qhLtb7A"
+# nama tab di MASTER LC -> site di dashboard
+LC_TABS = {
+    "HCI JABABEKA": "Jababeka", "AHI JABABEKA": "Jababeka", "KLS JABABEKA": "Jababeka",
+    "HCI CIKUPA": "Cikupa", "CORP SIDOARJO": "Sidoarjo", "CORP TALLO": "Tallo", "CORP TAMORA": "Tamora",
+}
+# kolom output -> nama kolom yang mungkin dipakai di sheet
+LC_COLS = {
+    "TRANSNO": ["TRANSNO"], "DATE": ["PLANDELIVERYDATE"], "NOPOL": ["NOPOL"], "ARMADA": ["JENISARMADA"],
+    "TYPE": ["Type"], "PENGIRIMAN": ["TYPEPENGIRIMAN"], "AREA": ["AREA"], "RITASE": ["Ritase", "RIT VR"],
+    "STATUS": ["Status LC"], "DRIVER_ID": ["DriverId"], "DRIVER_NAME": ["DriverName"],
+    "CREW1_ID": ["Crew1Id"], "CREW1_NAME": ["Crew1Name"], "CHECKOUT": ["Check Out"], "TIBA_DC": ["Tiba di DC"],
+    "CBM": ["CBM"], "TOTAL_DO": ["TOTAL DO"],
+}
+
+
+def norm_dt(v):
+    """Serial Sheets / teks tanggal-jam -> 'YYYY-MM-DD HH:MM'."""
+    if v in (None, ""):
+        return ""
+    if isinstance(v, (int, float)):
+        t = dt.datetime(1899, 12, 30) + dt.timedelta(days=float(v))
+        return t.strftime("%Y-%m-%d %H:%M")
+    return str(v).strip()
+
+
+def norm_lc_date(v):
+    if isinstance(v, (int, float)):
+        return norm_date(v)
+    s = str(v or "").strip()
+    m = re.match(r"^(\d{1,2})/(\d{1,2})/(\d{2})(?!\d)", s)  # 10/23/26
+    if m:
+        mo, d, y = map(int, m.groups())
+        return dt.date(2000 + y, mo, d).isoformat()
+    return norm_date(s)
+
+
+def sync_lc(gc, min_date=""):
+    info = {"status": "error", "tabs": {}, "errors": []}
+    try:
+        sh = gc.open_by_key(LC_ID)
+    except Exception as e:  # noqa: BLE001
+        info["errors"].append(f"file tidak bisa dibuka: {e}")
+        print(f"LC: file tidak bisa dibuka ({e})")
+        return info
+    frames = []
+    titles = {w.title.strip().upper(): w for w in sh.worksheets()}
+    for tab, site in LC_TABS.items():
+        ws = titles.get(tab)
+        if ws is None:
+            info["errors"].append(f"tab {tab} tidak ada"); continue
+        try:
+            head = ws.get_values("1:5")
+            hi = next(i for i, r in enumerate(head) if "DriverId" in [str(x).strip() for x in r])
+            header = [str(x).strip() for x in head[hi]]
+            pos = {}
+            for out, names in LC_COLS.items():
+                for n in names:
+                    if n in header:
+                        pos[out] = header.index(n) + 1; break
+            letter = lambda c: re.sub(r"\d", "", gspread.utils.rowcol_to_a1(1, c))
+            ranges = [f"{letter(c)}{hi + 2}:{letter(c)}" for c in pos.values()]
+            vals = ws.batch_get(ranges, value_render_option="UNFORMATTED_VALUE", date_time_render_option="SERIAL_NUMBER")
+            n = max((len(v) for v in vals), default=0)
+            data = {}
+            for out, v in zip(pos.keys(), vals):
+                col = [(r[0] if r else "") for r in v] + [""] * (n - len(v))
+                data[out] = col
+            df = pd.DataFrame(data)
+            for c in LC_COLS:
+                if c not in df.columns:
+                    df[c] = ""
+            df["DATE"] = df["DATE"].map(norm_lc_date)
+            for c in ["CHECKOUT", "TIBA_DC"]:
+                df[c] = df[c].map(norm_dt)
+            for c in ["DRIVER_ID", "CREW1_ID", "TRANSNO", "NOPOL"]:
+                df[c] = df[c].astype(str).str.strip().replace({"nan": "", "None": "", "-": "", "0": ""})
+            total = len(df)
+            df = df[(df["TRANSNO"] != "") & (df["DATE"] >= (min_date or "0")) & ((df["DRIVER_ID"] != "") | (df["CREW1_ID"] != ""))]
+            df.insert(0, "SITE", site); df.insert(1, "TAB", tab)
+            frames.append(df[["SITE", "TAB"] + list(LC_COLS)])
+            info["tabs"][tab] = {"rows": total, "kept": len(df), "missing_cols": [c for c in LC_COLS if c not in pos],
+                                 "date_min": df["DATE"].min() if len(df) else "", "date_max": df["DATE"].max() if len(df) else ""}
+            print(f"LC {tab}: {len(df)} dari {total} baris")
+        except Exception as e:  # noqa: BLE001
+            info["errors"].append(f"{tab}: {e}")
+            print(f"LC {tab}: gagal ({e})")
+    if frames:
+        out = pd.concat(frames, ignore_index=True).drop_duplicates(["TRANSNO"])
+        out.to_csv("data/LC.csv", index=False)
+        info["status"] = "ok"; info["rows"] = len(out)
+        print(f"OK LC.csv: {len(out)} baris")
+    return info
 
 if __name__ == "__main__":
     main()

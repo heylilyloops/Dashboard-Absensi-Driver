@@ -4,6 +4,9 @@ on:
   schedule:
     - cron: '0 0 * * *'   # setiap hari 07.00 WIB
   workflow_dispatch:       # bisa dijalankan manual dari tab Actions
+  push:                    # jalan juga saat script sync diubah
+    branches: [main]
+    paths: ['scripts/**', '.github/workflows/**']
 
 jobs:
   update-csv:
