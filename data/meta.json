@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-11-23T10:02+07:00",
+  "updated_at": "2026-11-23T11:52+07:00",
   "files": {
     "NDC_JABABEKA.csv": 31265,
     "NDC_CIKUPA.csv": 12890,
@@ -231,7 +231,7 @@
       },
       "CORP SIDOARJO": {
         "rows": 15581,
-        "kept": 3912,
+        "kept": 3913,
         "missing_cols": [],
         "header_row": 1,
         "header": [
@@ -390,6 +390,6 @@
       }
     },
     "errors": [],
-    "rows": 33056
+    "rows": 33057
   }
 }
