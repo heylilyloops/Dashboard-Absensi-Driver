@@ -378,7 +378,7 @@ def sync_lc(gc, min_date=""):
             df = df[(df["TRANSNO"] != "") & (df["DATE"] >= (min_date or "0")) & ((df["DRIVER_ID"] != "") | (df["CREW1_ID"] != ""))]
             df.insert(0, "SITE", site); df.insert(1, "TAB", tab)
             frames.append(df[["SITE", "TAB"] + list(LC_COLS)])
-            info["tabs"][tab] = {"rows": total, "kept": len(df), "missing_cols": [c for c in LC_COLS if c not in pos],
+            info["tabs"][tab] = {"rows": total, "kept": len(df), "missing_cols": [c for c in LC_COLS if c not in pos], "header_row": hi + 1, "header": header[:80],
                                  "date_min": df["DATE"].min() if len(df) else "", "date_max": df["DATE"].max() if len(df) else ""}
             print(f"LC {tab}: {len(df)} dari {total} baris")
         except Exception as e:  # noqa: BLE001
