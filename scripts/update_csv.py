@@ -309,6 +309,7 @@ LC_COLS = {
     "ARMADA": ["Type Armada", "JENISARMADA"], "TYPE": ["Type"], "PENGIRIMAN": ["Type Delivery", "TYPEPENGIRIMAN"],
     "AREA": ["Area", "AREA"], "JALUR": ["Jalur"], "KATEGORI": ["Kategori"], "DO": ["DO", "TOTAL DO"], "DP": ["DP"],
     "CBM": ["CBM"], "OLF": ["OLF"], "TAT": ["TAT"], "DRIVER_ID": ["DriverId"], "CREW1_ID": ["Crew1Id"],
+    "SHIP_AREA": ["Shipment Area"], "KEY": ["Key"], "DESTINATION": ["Destination"], "PULAU": ["Pulau"], "JARAK": ["Jarak"],
 }
 
 
