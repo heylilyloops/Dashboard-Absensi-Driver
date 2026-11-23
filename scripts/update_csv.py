@@ -305,11 +305,10 @@ LC_TABS = {
 }
 # kolom output -> nama kolom yang mungkin dipakai di sheet
 LC_COLS = {
-    "TRANSNO": ["TRANSNO"], "DATE": ["PLANDELIVERYDATE"], "NOPOL": ["NOPOL"], "ARMADA": ["JENISARMADA"],
-    "TYPE": ["Type"], "PENGIRIMAN": ["TYPEPENGIRIMAN"], "AREA": ["AREA"], "RITASE": ["Ritase", "RIT VR"],
-    "STATUS": ["Status LC"], "DRIVER_ID": ["DriverId"], "DRIVER_NAME": ["DriverName"],
-    "CREW1_ID": ["Crew1Id"], "CREW1_NAME": ["Crew1Name"], "CHECKOUT": ["Check Out"], "TIBA_DC": ["Tiba di DC"],
-    "CBM": ["CBM"], "TOTAL_DO": ["TOTAL DO"],
+    "TRANSNO": ["LC", "TRANSNO"], "DATE": ["Delivery Date", "PLANDELIVERYDATE"], "NOPOL": ["Nopol", "NOPOL"],
+    "ARMADA": ["Type Armada", "JENISARMADA"], "TYPE": ["Type"], "PENGIRIMAN": ["Type Delivery", "TYPEPENGIRIMAN"],
+    "AREA": ["Area", "AREA"], "JALUR": ["Jalur"], "KATEGORI": ["Kategori"], "DO": ["DO", "TOTAL DO"], "DP": ["DP"],
+    "CBM": ["CBM"], "OLF": ["OLF"], "TAT": ["TAT"], "DRIVER_ID": ["DriverId"], "CREW1_ID": ["Crew1Id"],
 }
 
 
@@ -351,7 +350,7 @@ def sync_lc(gc, min_date=""):
         try:
             head = ws.get_values("1:5")
             hi = next(i for i, r in enumerate(head) if "DriverId" in [str(x).strip() for x in r])
-            header = [str(x).strip() for x in head[hi]]
+            header = [re.sub(r"\s+", " ", str(x)).strip() for x in head[hi]]
             pos = {}
             for out, names in LC_COLS.items():
                 for n in names:
@@ -370,8 +369,7 @@ def sync_lc(gc, min_date=""):
                 if c not in df.columns:
                     df[c] = ""
             df["DATE"] = df["DATE"].map(norm_lc_date)
-            for c in ["CHECKOUT", "TIBA_DC"]:
-                df[c] = df[c].map(norm_dt)
+            df["TAT"] = df["TAT"].map(lambda v: round(float(v) * 24, 2) if isinstance(v, (int, float)) and v else "")  # jam
             for c in ["DRIVER_ID", "CREW1_ID", "TRANSNO", "NOPOL"]:
                 df[c] = df[c].astype(str).str.strip().replace({"nan": "", "None": "", "-": "", "0": ""})
             total = len(df)
