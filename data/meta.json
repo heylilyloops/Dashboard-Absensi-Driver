@@ -1,16 +1,170 @@
 {
-  "updated_at": "2026-11-22T11:12+07:00",
+  "updated_at": "2026-11-23T09:54+07:00",
   "files": {
     "NDC_JABABEKA.csv": 31265,
-    "NDC_CIKUPA.csv": 9089,
-    "NDC_SIDOARJO.csv": 6649,
-    "RDC_TALLO.csv": 2463
+    "NDC_CIKUPA.csv": 12890,
+    "NDC_SIDOARJO.csv": 8917,
+    "RDC_TALLO.csv": 2563
   },
   "variable_income": {
     "status": "ok",
     "update_label": "20 Nov 2026",
     "ot_until": "2026-11-15",
     "insentif_until": "2026-11-18",
-    "rows": 13650
+    "rows": 15040
+  },
+  "lc": {
+    "status": "ok",
+    "tabs": {
+      "HCI JABABEKA": {
+        "rows": 30416,
+        "kept": 0,
+        "missing_cols": [
+          "TRANSNO",
+          "DATE",
+          "NOPOL",
+          "ARMADA",
+          "PENGIRIMAN",
+          "AREA",
+          "RITASE",
+          "STATUS",
+          "DRIVER_NAME",
+          "CREW1_NAME",
+          "CHECKOUT",
+          "TIBA_DC",
+          "TOTAL_DO"
+        ],
+        "date_min": "",
+        "date_max": ""
+      },
+      "AHI JABABEKA": {
+        "rows": 32022,
+        "kept": 0,
+        "missing_cols": [
+          "TRANSNO",
+          "DATE",
+          "NOPOL",
+          "ARMADA",
+          "PENGIRIMAN",
+          "AREA",
+          "RITASE",
+          "STATUS",
+          "DRIVER_NAME",
+          "CREW1_NAME",
+          "CHECKOUT",
+          "TIBA_DC",
+          "TOTAL_DO"
+        ],
+        "date_min": "",
+        "date_max": ""
+      },
+      "KLS JABABEKA": {
+        "rows": 9452,
+        "kept": 0,
+        "missing_cols": [
+          "TRANSNO",
+          "DATE",
+          "NOPOL",
+          "ARMADA",
+          "PENGIRIMAN",
+          "AREA",
+          "RITASE",
+          "STATUS",
+          "DRIVER_NAME",
+          "CREW1_NAME",
+          "CHECKOUT",
+          "TIBA_DC",
+          "TOTAL_DO"
+        ],
+        "date_min": "",
+        "date_max": ""
+      },
+      "HCI CIKUPA": {
+        "rows": 20657,
+        "kept": 0,
+        "missing_cols": [
+          "TRANSNO",
+          "DATE",
+          "NOPOL",
+          "ARMADA",
+          "PENGIRIMAN",
+          "AREA",
+          "RITASE",
+          "STATUS",
+          "DRIVER_NAME",
+          "CREW1_NAME",
+          "CHECKOUT",
+          "TIBA_DC",
+          "TOTAL_DO"
+        ],
+        "date_min": "",
+        "date_max": ""
+      },
+      "CORP SIDOARJO": {
+        "rows": 15581,
+        "kept": 0,
+        "missing_cols": [
+          "TRANSNO",
+          "DATE",
+          "NOPOL",
+          "ARMADA",
+          "PENGIRIMAN",
+          "AREA",
+          "RITASE",
+          "STATUS",
+          "DRIVER_NAME",
+          "CREW1_NAME",
+          "CHECKOUT",
+          "TIBA_DC",
+          "TOTAL_DO"
+        ],
+        "date_min": "",
+        "date_max": ""
+      },
+      "CORP TALLO": {
+        "rows": 7569,
+        "kept": 0,
+        "missing_cols": [
+          "TRANSNO",
+          "DATE",
+          "NOPOL",
+          "ARMADA",
+          "PENGIRIMAN",
+          "AREA",
+          "RITASE",
+          "STATUS",
+          "DRIVER_NAME",
+          "CREW1_NAME",
+          "CHECKOUT",
+          "TIBA_DC",
+          "TOTAL_DO"
+        ],
+        "date_min": "",
+        "date_max": ""
+      },
+      "CORP TAMORA": {
+        "rows": 10013,
+        "kept": 0,
+        "missing_cols": [
+          "TRANSNO",
+          "DATE",
+          "NOPOL",
+          "ARMADA",
+          "PENGIRIMAN",
+          "AREA",
+          "RITASE",
+          "STATUS",
+          "DRIVER_NAME",
+          "CREW1_NAME",
+          "CHECKOUT",
+          "TIBA_DC",
+          "TOTAL_DO"
+        ],
+        "date_min": "",
+        "date_max": ""
+      }
+    },
+    "errors": [],
+    "rows": 0
   }
 }
