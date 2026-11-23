@@ -528,6 +528,14 @@ function rel(v, ref, higherBad, d=1, unit='%', tolAbs){
   return `<span class="pill ${c}">${icon} ${fmt(v,d)}${unit}</span>`;
 }
 const sub = t => `<div class="sub">${t}</div>`;
+// bulatkan beberapa porsi (2 desimal) supaya jumlahnya tepat 100% — metode sisa terbesar
+function roundTo100(parts, total, dec=2){
+  if(!total) return parts.map(()=>null);
+  const f = 10**dec, raw = parts.map(v=>v/total*100*f), base = raw.map(Math.floor);
+  let left = Math.round(100*f) - base.reduce((a,b)=>a+b,0);
+  raw.map((v,i)=>[v-base[i],i]).sort((a,b)=>b[0]-a[0]).forEach(([,i])=>{ if(left>0){ base[i]++; left--; } });
+  return base.map(v=>v/f);
+}
 function tile(q, val, note, cur, prev, higherBad, cls='hub neutral'){
   let d='';
   if(higherBad!==null){
@@ -562,11 +570,13 @@ function render(){
   const oth = a => a.abs.CUTI+a.abs.SAKIT+a.abs.IZIN+a.abs.LAINNYA;
   const mkOrg = new Set(rows.filter(r=>r.status==='ALPA').map(r=>r.nik)).size;
   const att = rate(A.present,A.sched), l12 = rate(A.long12,A.durN), rcp = rate(A.rcChg,A.rcCmp);
+  // kehadiran + mangkir + cuti/sakit/izin = 100%: dibulatkan 2 desimal dengan metode sisa terbesar supaya totalnya pas 100,00%
+  const P3 = roundTo100([A.present, A.abs.ALPA, oth(A)], A.sched);
   $('sum').innerHTML =
     tile('Jumlah orang (MPP)', fmt(A.people.size), jobs, null,null,null) +
-    tile('% Kehadiran', att==null?'–':fmt(att,2)+'%', `${fmt(A.present)} hari masuk dari ${fmt(A.sched)} hari wajib masuk`, att, B&&rate(B.present,B.sched), false, 'hub good') +
-    tile('% Mangkir', fmt(rate(A.abs.ALPA,A.sched)||0,2)+'%', `${fmt(mkOrg)} orang · total ${fmt(A.abs.ALPA)} hari tidak masuk tanpa izin`, rate(A.abs.ALPA,A.sched), B&&rate(B.abs.ALPA,B.sched), true, A.abs.ALPA?'hub bad':'hub good') +
-    tile('% Cuti, sakit & izin', fmt(rate(oth(A),A.sched)||0,2)+'%', `Cuti ${fmt(A.abs.CUTI)} · Sakit ${fmt(A.abs.SAKIT)} · Izin ${fmt(A.abs.IZIN)} · Tanpa keterangan ${fmt(A.abs.LAINNYA)}`, rate(oth(A),A.sched), B&&rate(oth(B),B.sched), true) +
+    tile('% Kehadiran', att==null?'–':fmt(P3[0],2)+'%', `${fmt(A.present)} hari masuk dari ${fmt(A.sched)} hari wajib masuk`, att, B&&rate(B.present,B.sched), false, 'hub good') +
+    tile('% Mangkir', A.sched?fmt(P3[1],2)+'%':'–', `${fmt(mkOrg)} orang · total ${fmt(A.abs.ALPA)} hari tidak masuk tanpa izin`, rate(A.abs.ALPA,A.sched), B&&rate(B.abs.ALPA,B.sched), true, A.abs.ALPA?'hub bad':'hub good') +
+    tile('% Cuti, sakit & izin', A.sched?fmt(P3[2],2)+'%':'–', `Cuti ${fmt(A.abs.CUTI)} · Sakit ${fmt(A.abs.SAKIT)} · Izin ${fmt(A.abs.IZIN)} · Tanpa keterangan ${fmt(A.abs.LAINNYA)}`, rate(oth(A),A.sched), B&&rate(oth(B),B.sched), true) +
     tile('Kerja lebih dari 12 jam sehari ⚠', l12==null?'–':fmt(l12,1)+'%', `${fmt(A.long12)} dari ${fmt(A.durN)} hari kerja · rata-rata kerja ${hhmm(A.durN?A.durSum/A.durN:null)} sehari`, l12, B&&rate(B.long12,B.durN), true, A.long12?'hub bad':'hub good');
 
   renderAttDow(rows);
