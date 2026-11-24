@@ -1,10 +1,10 @@
 {
-  "updated_at": "2026-11-23T11:52+07:00",
+  "updated_at": "2026-11-24T14:41+07:00",
   "files": {
     "NDC_JABABEKA.csv": 31265,
     "NDC_CIKUPA.csv": 12890,
     "NDC_SIDOARJO.csv": 8917,
-    "RDC_TALLO.csv": 2563
+    "RDC_TALLO.csv": 2613
   },
   "variable_income": {
     "status": "ok",
@@ -17,8 +17,8 @@
     "status": "ok",
     "tabs": {
       "HCI JABABEKA": {
-        "rows": 30416,
-        "kept": 7673,
+        "rows": 30535,
+        "kept": 7790,
         "missing_cols": [],
         "header_row": 1,
         "header": [
@@ -68,11 +68,11 @@
           "Sizing Armada"
         ],
         "date_min": "2026-09-01",
-        "date_max": "2026-11-22"
+        "date_max": "2026-11-23"
       },
       "AHI JABABEKA": {
-        "rows": 32022,
-        "kept": 8585,
+        "rows": 32142,
+        "kept": 8705,
         "missing_cols": [],
         "header_row": 1,
         "header": [
@@ -124,11 +124,11 @@
           "LC TYPE"
         ],
         "date_min": "2026-09-01",
-        "date_max": "2026-11-22"
+        "date_max": "2026-11-23"
       },
       "KLS JABABEKA": {
         "rows": 9501,
-        "kept": 2598,
+        "kept": 2643,
         "missing_cols": [
           "OLF"
         ],
@@ -173,11 +173,11 @@
           "Sizing Armada"
         ],
         "date_min": "2026-09-01",
-        "date_max": "2026-11-21"
+        "date_max": "2026-11-23"
       },
       "HCI CIKUPA": {
         "rows": 21293,
-        "kept": 5839,
+        "kept": 5928,
         "missing_cols": [],
         "header_row": 1,
         "header": [
@@ -227,11 +227,11 @@
           "SLA Check In"
         ],
         "date_min": "2026-09-01",
-        "date_max": "2026-11-22"
+        "date_max": "2026-11-23"
       },
       "CORP SIDOARJO": {
-        "rows": 15581,
-        "kept": 3913,
+        "rows": 15636,
+        "kept": 3968,
         "missing_cols": [],
         "header_row": 1,
         "header": [
@@ -280,11 +280,11 @@
           "SLA Check In"
         ],
         "date_min": "2026-09-01",
-        "date_max": "2026-11-22"
+        "date_max": "2026-11-23"
       },
       "CORP TALLO": {
         "rows": 18062,
-        "kept": 1868,
+        "kept": 1897,
         "missing_cols": [],
         "header_row": 1,
         "header": [
@@ -333,11 +333,11 @@
           "SLA Check In"
         ],
         "date_min": "2026-09-01",
-        "date_max": "2026-11-22"
+        "date_max": "2026-11-23"
       },
       "CORP TAMORA": {
         "rows": 20533,
-        "kept": 2595,
+        "kept": 2635,
         "missing_cols": [],
         "header_row": 1,
         "header": [
@@ -386,10 +386,10 @@
           "SLA Check In"
         ],
         "date_min": "2026-09-01",
-        "date_max": "2026-11-22"
+        "date_max": "2026-11-23"
       }
     },
     "errors": [],
-    "rows": 33057
+    "rows": 33552
   }
 }
