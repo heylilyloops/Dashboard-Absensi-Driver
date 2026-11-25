@@ -169,6 +169,10 @@ details.more>.inner{margin-top:8px}
 .sub{font-size:10.5px;color:var(--muted);font-family:"Plus Jakarta Sans",system-ui,sans-serif;font-weight:500;margin-top:1px}
 tfoot td{font-weight:700;background:#f8fafc;border-top:1px solid var(--line)}
 tfoot tr:first-child td{border-top:2px solid var(--line)}
+.roster-alert{margin-top:10px;font-size:12.5px;color:#7f1d1d;background:#fff1f1;border:1px solid #f5c2c2;border-radius:8px;padding:10px 12px;line-height:1.7}
+.roster-alert b{color:#991b1b}
+.roster-alert .who{display:inline-block;background:#fff;border:1px solid #f5c2c2;border-radius:999px;padding:0 8px;margin:2px 4px 2px 0;white-space:nowrap}
+.roster-alert a{color:#991b1b;font-weight:600}
 .cover-note{margin-top:10px;font-size:12px;color:#92400e;background:#fff8e6;border:1px solid #f6e2b0;border-radius:8px;padding:8px 12px}
 .dates{white-space:normal;min-width:320px;display:inline-block;text-align:left;font-size:12px;color:var(--ink-2)}
 thead th{white-space:normal;vertical-align:bottom;line-height:1.3;min-width:64px}
@@ -206,6 +210,7 @@ td[style*="184,64,26"] .sub{color:inherit;opacity:.85}
       <button class="btn" id="btnReset">Reset</button>
     </div>
     <div class="cover-note" id="coverNote"></div>
+    <div class="roster-alert" id="rosterAlert" style="display:none"></div>
 
     <!-- RINGKASAN -->
     <div class="sec-title"><h2>Ringkasan</h2><span id="periodLbl"></span></div>
@@ -224,8 +229,26 @@ td[style*="184,64,26"] .sub{color:inherit;opacity:.85}
       <div class="tbl-wrap flat"><table id="tStatDow"></table></div>
     </div>
 
+    <!-- KESEHATAN ROSTER -->
+    <div class="sec-title" id="roster"><h2>2 · Kesehatan Roster</h2><span>beban per orang: hari kerja berturut-turut, jatah OFF, dan jam kerja per minggu · warna mengacu aturan istirahat mingguan (UU Ketenagakerjaan Ps. 79) &amp; batas lembur (PP 35/2021)</span></div>
+    <div class="sum" id="rsSum"></div>
+    <div class="card" style="margin-top:14px">
+      <h3>Kesehatan roster per site</h3>
+      <div class="desc" id="rsSiteDesc">Jumlah orang di tiap tingkat · hari kerja berturut-turut = terpanjang di periode terpilih</div>
+      <div class="tbl-wrap flat"><table id="tRsSite"></table></div>
+    </div>
+    <div class="card" style="margin-top:14px">
+      <h3>Kesehatan roster per driver</h3>
+      <div class="tbl-tools">
+        <div class="chips" id="rsChips"></div>
+        <input id="rsQ" placeholder="Cari nama atau NIK…">
+        <span class="count" id="rsCount"></span>
+      </div>
+      <div class="tbl-wrap"><table id="tRsDrv"></table></div>
+    </div>
+
     <!-- 3 -->
-    <div class="sec-title"><h2>2 · Lama Kerja per Hari</h2><span>dari absen masuk sampai absen pulang · normal 8 jam, lembur maksimal 4 jam sehari (PP 35/2021)</span></div>
+    <div class="sec-title"><h2>3 · Lama Kerja per Hari</h2><span>dari absen masuk sampai absen pulang · normal 8 jam, lembur maksimal 4 jam sehari (PP 35/2021)</span></div>
     <div class="card">
       <h3>Rata-rata jumlah driver menurut lama kerja</h3>
       <div class="desc">Isi = rata-rata jumlah orang per hari di tiap rentang jam · hanya hari yang absen masuk & pulangnya lengkap · baris &gt; 12 jam: makin merah = makin banyak</div>
@@ -233,7 +256,7 @@ td[style*="184,64,26"] .sub{color:inherit;opacity:.85}
     </div>
 
     <!-- 4 -->
-    <div class="sec-title" id="lk"><h2>3 · Pengiriman Luar Kota</h2><span>trip dari status Perdin di absensi + LC luar kota · kondisi driver sehari sebelum berangkat dan sehari setelah pulang · bahan evaluasi expansi luar kota</span></div>
+    <div class="sec-title" id="lk"><h2>4 · Pengiriman Luar Kota</h2><span>trip dari status Perdin di absensi + LC luar kota · kondisi driver sehari sebelum berangkat dan sehari setelah pulang · bahan evaluasi expansi luar kota</span></div>
     <div class="sum" id="lkSum"></div>
     <div class="grid2" style="margin-top:14px">
       <div class="card">
@@ -281,7 +304,7 @@ td[style*="184,64,26"] .sub{color:inherit;opacity:.85}
     </div>
 
     <!-- 5 -->
-    <div class="sec-title" id="daftar"><h2>4 · Daftar Driver</h2><span>pilih kategori untuk melihat siapa yang perlu ditindaklanjuti · klik judul kolom untuk mengurutkan</span></div>
+    <div class="sec-title" id="daftar"><h2>5 · Daftar Driver</h2><span>pilih kategori untuk melihat siapa yang perlu ditindaklanjuti · klik judul kolom untuk mengurutkan</span></div>
     <div class="card">
       <div class="tbl-tools">
         <div class="chips" id="chips"></div>
@@ -300,6 +323,7 @@ td[style*="184,64,26"] .sub{color:inherit;opacity:.85}
         <b>% Kehadiran</b> = hari driver masuk kerja ÷ hari dia wajib masuk. <b>Hari wajib masuk</b> = semua hari sesuai jadwal, kecuali hari OFF. Contoh: dijadwalkan masuk 26 hari, masuk 23 hari, sakit 1, cuti 2 → kehadiran 23 ÷ 26 = 88%.<br>
         <b>Dihitung masuk:</b> masuk normal (termasuk yang telat), lupa absen tapi ada jam masuk/pulang, dinas dalam kota maupun luar kota (perdin), masuk di hari libur nasional. <b>Dihitung tidak masuk:</b> sakit, cuti, izin (termasuk menikah, melahirkan, duka), mangkir, dan tidak ada keterangan. <b>Tidak dihitung sama sekali:</b> hari OFF dan personel yang mutasi.<br>
         <b>Rata-rata per hari (Senin–Minggu)</b> = jumlah orang di hari itu dirata-rata dari semua tanggal dengan hari yang sama di periode terpilih (misalnya semua hari Senin). Dihitung per site dulu, lalu dijumlahkan, supaya site yang datanya belum update tidak menurunkan angka site lain. <b>MPP</b> = jumlah orang yang tercatat di absensi pada periode terpilih.<br>
+        <b>Kesehatan roster.</b> <b>Hari kerja</b> = status Hadir/Dinas, atau ada jam absen <b>masuk</b> (termasuk hari berstatus OFF yang ternyata ada jam masuk). Jam pulang saja di hari OFF tidak dihitung, karena itu sisa shift malam hari sebelumnya. <b>Hari kerja berturut-turut</b> = jumlah hari kerja tanpa jeda OFF, cuti, sakit, atau tidak masuk; 7–9 hari = perhatian, ≥ 10 hari = kritis (istirahat mingguan 1 hari per 6 hari kerja, UU Ketenagakerjaan Ps. 79). <b>Saat ini</b> = dihitung sampai tanggal data terakhir tiap site, tidak ikut filter tanggal. <b>Libur per minggu</b> = jumlah hari tidak bekerja (OFF tanpa jam masuk, cuti, sakit, dll) ÷ jumlah minggu data orang itu; informasi saja, penilaian istirahat memakai hari kerja berturut-turut. <b>Jam kerja efektif per minggu</b> = total durasi absen masuk–pulang, dikurangi 1 jam istirahat per hari untuk hari &gt; 5 jam, dibagi jumlah minggu; &gt; 48 jam = perhatian, &gt; 58 jam = kritis (40 jam + lembur maksimal 18 jam, PP 35/2021). Hari tanpa jam pulang (mis. perdin) tidak terhitung, jadi angka ini perkiraan.<br>
         <b>Lama kerja</b> = dari absen masuk sampai absen pulang, sudah termasuk istirahat, ditulis dalam jam &amp; menit. Rentang: sampai 8 jam = normal, 8–10 jam = lembur sampai 2 jam, 10–12 jam = lembur 2–4 jam, lebih dari 12 jam = lewat batas lembur 4 jam sehari (PP 35/2021). Data di atas 20 jam dianggap salah input.<br>
         <b>Warna &amp; panah naik/turun</b> di ringkasan = dibanding periode sebelumnya dengan panjang yang sama. Warna di tabel = dibanding rata-rata semua site. Keduanya <b>bukan target resmi</b>.<br>
         <b>Perjalanan luar kota (trip)</b> = hari luar kota berturut-turut untuk satu orang. <b>Hari luar kota</b> = status Dinas/Tgs Luar Kota (Perdin) di absensi, <b>atau</b> hari masuk kerja yang ada LC luar kota atas namanya (LC dari MASTER LC NDC-RDC 2026 dengan Shipment Area = Luar Kota, dicocokkan lewat DriverId / Crew1Id dan Delivery Date). Dinas dalam kota tidak dihitung. <b>Trip pulang-hari</b> = trip 1 hari; lama kerjanya diambil dari absen masuk–pulang hari itu, hanya kalau absennya tercatat Hadir. Dilihat kondisi driver <b>sehari sebelum berangkat</b> dan <b>sehari setelah pulang</b>: istirahat (OFF), kerja biasa, kerja lebih dari 12 jam, atau tidak masuk. Trip yang berangkat di hari pertama data atau pulang di hari terakhir data tidak ikut dihitung di bagian sebelum/sesudah. <b>Perjalanan berisiko</b> (acuan sementara, belum standar resmi) = sehari sebelum berangkat kerja lebih dari 12 jam, besoknya setelah pulang kerja lebih dari 12 jam, atau perjalanan 3 hari lebih tapi besoknya tidak dapat OFF, atau trip pulang-hari dengan lama kerja lebih dari 12 jam. <b>Cek pencatatan perdin</b> membandingkan setiap LC luar kota dengan status absensi orangnya di delivery date.<br>
@@ -319,6 +343,11 @@ const CONFIG = {
   NORMAL_H: 8,              // jam kerja normal per hari
   LONG_H: 12,               // 8 jam + lembur 4 jam (PP 35/2021) → di atas ini lewat batas
   MAX_DURATION_H: 20,       // durasi kerja > ini dianggap salah input
+  STREAK_WARN: 7,           // hari kerja berturut-turut: 7–9 perhatian
+  STREAK_CRIT: 10,          // ≥ 10 kritis (istirahat mingguan terlewat)
+  WEEK_H_WARN: 48,          // jam kerja per minggu > 48 (6 hari × 8 jam) perhatian
+  WEEK_H_CRIT: 58,          // > 58 (40 jam + lembur 18 jam, PP 35/2021) kritis
+  BREAK_H: 1,               // jam istirahat per hari yang dikurangkan dari durasi absen (hari > 5 jam)
   LK_LONG_TRIP: 3,          // trip luar kota ≥ 3 hari tanpa OFF di H+1 = berisiko (acuan sementara)
   DEFAULT_DAYS: 28,         // saat dibuka: 4 minggu terakhir
   LC_FILE: 'LC.csv',        // data LC pengiriman (MASTER LC NDC-RDC 2026) — dipakai untuk LC luar kota
@@ -420,10 +449,13 @@ function prepare(raw){
       tin: toMin(r['TIME ABSEN IN']), tout: toMin(r['TIME ABSEN OUT']), status: classify(r)
     };
     o.present = o.status==='HADIR' || o.status==='DINAS';
+    // hari kerja (untuk roster): Hadir/Dinas, atau ada jam MASUK. Jam pulang saja di hari OFF = sisa shift malam, tidak dihitung.
+    o.work = o.present || o.tin!=null;
+    o.offWork = !o.present && o.tin!=null;   // tercatat OFF/lainnya tapi ada jam masuk
     o.lk = o.status==='DINAS' && !/dalam kota/i.test(String(r['DESCRIPTION']||''));
     // Tallo hanya punya satu kolom jadwal (roster = PeoplePro), jadi plan vs aktual tidak bisa dibandingkan
     o.rc = r['SITE']==='RDC Tallo' ? 'NOSRC' : rosterCmp(o.ro, o.pp);
-    if(o.present && o.tin!=null && o.tout!=null){
+    if(o.work && o.tin!=null && o.tout!=null){
       let dur = o.tout - o.tin; if(dur<0) dur += 1440;
       if(dur>0 && dur <= CONFIG.MAX_DURATION_H*60) o.dur = dur;
     }
@@ -486,10 +518,11 @@ function setupFilters(){
     const s=$('fSite').value; opts($('fFac'), uniq(ROWS.filter(r=>!s||r.site===s).map(r=>r.fac)), 'Semua facility'); render();
   });
   $('btnReset').onclick = ()=>{ setDefaultDates(); ['fSite','fFac','fJob'].forEach(i=>$(i).value=''); opts($('fFac'),uniq(ROWS.map(r=>r.fac)),'Semua facility');
-    TBL.chip='all'; $('q').value=''; LK.chip='all'; LK.q=''; $('lkQ').value=''; render(); };
+    TBL.chip='all'; $('q').value=''; LK.chip='all'; LK.q=''; $('lkQ').value=''; RS.chip='all'; RS.q=''; $('rsQ').value=''; render(); };
   $('q').addEventListener('input',renderPersonTable);
   $('btnCsv').onclick = downloadCsv;
   $('lkQ').addEventListener('input',()=>{ LK.q=$('lkQ').value; renderLkTable(); });
+  $('rsQ').addEventListener('input',()=>{ RS.q=$('rsQ').value; renderRsTable(); });
   $('btnLkCsv').onclick = downloadLkCsv;
 }
 function filtered(from,to){
@@ -581,6 +614,7 @@ function render(){
 
   renderAttDow(rows);
   renderStatDow(rows);
+  renderRoster2(rows);
   renderDur(rows);
   renderTrips();
   PERSON = people(rows); renderChips(); renderPersonTable();
@@ -646,6 +680,119 @@ function renderRoster(rows){
   ], data, {foot:T});
 }
 
+/* ---- 2 · KESEHATAN ROSTER ---- */
+// r.streak = hari kerja berturut-turut s/d tanggal itu; r.streakStart = tanggal mulai; r.lastOff = OFF/libur terakhir sebelumnya
+let RS = {chip:'all', q:'', cur:new Map()};
+function buildStreaks(){
+  const byP = {}; ROWS.forEach(r=>(byP[r.site+'|'+r.nik]||(byP[r.site+'|'+r.nik]=[])).push(r));
+  const siteMax = {}; ROWS.forEach(r=>{ if(!siteMax[r.site]||r.date>siteMax[r.site]) siteMax[r.site]=r.date; });
+  RS.cur = new Map();
+  Object.values(byP).forEach(list=>{
+    list.sort((a,b)=>a.date<b.date?-1:1);
+    let prev=null, n=0, start=null, lastOff=null;
+    list.forEach(r=>{
+      const cont = prev && dayDiff(prev.date, r.date)===1;
+      if(r.work){ if(cont && n>0) n++; else { n=1; start=r.date; } }
+      else { n=0; start=null; if(r.status==='OFF') lastOff=r.date; }
+      r.streak=n; r.streakStart=start; r.lastOff=lastOff;
+      prev=r;
+    });
+    const last = list[list.length-1];
+    // "saat ini" hanya kalau data orang itu sampai tanggal terakhir site-nya
+    if(last.date===siteMax[last.site]) RS.cur.set(last.site+'|'+last.nik, last);
+  });
+}
+const lvl = (v, warn, crit) => v==null ? null : v>=crit ? 'r' : v>=warn ? 'a' : 'g';
+const badge = (v, l, txt) => v==null ? '–' : `<span class="pill ${l}">${l==='r'?'■':l==='a'?'▲':'●'} ${txt??fmt(v)}</span>`;
+function rosterPeople(rows){
+  const m = {};
+  rows.forEach(r=>{
+    const k=r.site+'|'+r.nik;
+    const p=m[k]||(m[k]={site:r.site,nik:r.nik,nama:r.nama,job:r.job,fac:r.fac,n:0,off:0,rest:0,hours:0,durDays:0,offWork:0,maxS:0,maxStart:null,maxEnd:null});
+    p.n++; if(!r.work){ p.rest++; if(r.status==='OFF') p.off++; } if(r.offWork) p.offWork++;
+    if(r.dur!=null){ const h=r.dur/60; p.hours += h>5 ? h-CONFIG.BREAK_H : h; p.durDays++; }
+
+    if(r.streak>p.maxS){ p.maxS=r.streak; p.maxStart=r.streakStart; p.maxEnd=r.date; }
+  });
+  return Object.values(m).map(p=>{
+    const wk = p.n/7, c = RS.cur.get(p.site+'|'+p.nik);
+    return {...p, weeks:wk, restPW: wk>=1 ? p.rest/wk : null, hPW: wk>=1 ? p.hours/wk : null,
+      cur: c ? c.streak : null, curStart: c ? c.streakStart : null, lastOff: c ? c.lastOff : null,
+      lS: lvl(p.maxS, CONFIG.STREAK_WARN, CONFIG.STREAK_CRIT), lC: c ? lvl(c.streak, CONFIG.STREAK_WARN, CONFIG.STREAK_CRIT) : null,
+      lH: wk>=1 ? (p.hours/wk > CONFIG.WEEK_H_CRIT ? 'r' : p.hours/wk > CONFIG.WEEK_H_WARN ? 'a' : 'g') : null};
+  });
+}
+function renderRoster2(rows){
+  const rr = rows.filter(r=>r.job==='DRIVER'||r.job==='ASST DRIVER');
+  const P = rosterPeople(rr);
+  RS.all = P;
+  // alert atas: yang SAAT INI ≥ batas kritis (ikut filter site/facility/jabatan, tidak ikut tanggal)
+  const s=$('fSite').value, fa=$('fFac').value, j=$('fJob').value;
+  const nowCrit = [...RS.cur.values()].filter(r=>(r.job==='DRIVER'||r.job==='ASST DRIVER') && (!s||r.site===s) && (!fa||r.fac===fa) && (!j||r.job===j) && r.streak>=CONFIG.STREAK_CRIT)
+    .sort((a,b)=>b.streak-a.streak);
+  const al = $('rosterAlert');
+  if(nowCrit.length){
+    al.style.display='';
+    al.innerHTML = `⚠ <b>${fmt(nowCrit.length)} orang saat ini sudah ${CONFIG.STREAK_CRIT} hari atau lebih kerja berturut-turut tanpa OFF</b> (sampai data terakhir tiap site): ` +
+      nowCrit.slice(0,12).map(r=>`<span class="who">${r.nama} · ${r.site} · <b>${r.streak} hari</b>${r.lastOff?` · OFF terakhir ${dLbl(r.lastOff)}`:''}</span>`).join('') +
+      (nowCrit.length>12?` dan ${nowCrit.length-12} lainnya. `:' ') + `<a href="#roster">Lihat detail →</a>`;
+  } else al.style.display='none';
+
+  const cnt = f => P.filter(f).length;
+  const evalO = P.filter(p=>p.restPW!=null), evalH = P.filter(p=>p.lH);
+  $('rsSum').innerHTML = [
+    tile('Saat ini ≥ '+CONFIG.STREAK_CRIT+' hari belum OFF', fmt(nowCrit.length), `orang · per tanggal data terakhir tiap site`, null,null,null, nowCrit.length?'hub bad':'hub good'),
+    tile('Pernah ≥ '+CONFIG.STREAK_CRIT+' hari kerja berturut-turut', fmt(cnt(p=>p.lS==='r')), `dari ${fmt(P.length)} orang di periode ini · ${fmt(cnt(p=>p.lS==='a'))} orang ${CONFIG.STREAK_WARN}–${CONFIG.STREAK_CRIT-1} hari`, null,null,null, cnt(p=>p.lS==='r')?'hub bad':'hub good'),
+    tile('Rata-rata hari libur per minggu', fmt(evalO.reduce((a,p)=>a+p.restPW,0)/(evalO.length||1),2), `hari per orang (OFF, cuti, sakit, dll) · ${fmt(cnt(p=>p.restPW!=null&&p.restPW<0.8))} orang di bawah 0,8 hari per minggu`, null,null,null, 'hub neutral'),
+    tile(`Kerja > ${CONFIG.WEEK_H_CRIT} jam per minggu`, fmt(cnt(p=>p.lH==='r')), `dari ${fmt(evalH.length)} orang · ${fmt(cnt(p=>p.lH==='a'))} orang ${CONFIG.WEEK_H_WARN}–${CONFIG.WEEK_H_CRIT} jam · rata-rata ${fmt(evalH.reduce((a,p)=>a+p.hPW,0)/(evalH.length||1),1)} jam efektif/minggu`, null,null,null, cnt(p=>p.lH==='r')?'hub bad':'hub good'),
+  ].join('');
+
+  // per site / facility
+  const bySite = !s, gk = p => bySite ? p.site : p.fac;
+  const mk = (g, X) => { const E=X.filter(p=>p.lH);
+    return {g, n:X.length, sG:X.filter(p=>p.lS==='g').length, sA:X.filter(p=>p.lS==='a').length, sR:X.filter(p=>p.lS==='r').length,
+      now:X.filter(p=>p.lC==='r').length, maxS:Math.max(0,...X.map(p=>p.maxS)),
+      rPW:(()=>{const E=X.filter(p=>p.restPW!=null); return E.length?E.reduce((a,p)=>a+p.restPW,0)/E.length:null;})(), hPW:E.length?E.reduce((a,p)=>a+p.hPW,0)/E.length:null, hA:X.filter(p=>p.lH==='a').length, hR:X.filter(p=>p.lH==='r').length}; };
+  const groups = uniq(P.map(gk));
+  $('rsSiteDesc').innerHTML = `Jumlah orang di tiap tingkat, per ${bySite?'site':'facility'} · hari kerja berturut-turut = yang terpanjang di periode terpilih · jam efektif = durasi absen masuk–pulang dikurangi 1 jam istirahat per hari`;
+  const num = (k,c) => x => x[k] ? (c&&x.g!=='Total'?`<span class="pill ${c}">${fmt(x[k])}</span>`:fmt(x[k]))+sub(pct(x[k],x.n,0)) : '0';
+  sortTable('tRsSite', [
+    {k:'g', l:bySite?'Site':'Facility', al:'l', f:x=>`<b>${x.g}</b>`},
+    {k:'n', l:'Orang'},
+    {k:'sG', l:'● ≤ 6 hari berturut', f:num('sG')},
+    {k:'sA', l:`▲ ${CONFIG.STREAK_WARN}–${CONFIG.STREAK_CRIT-1} hari berturut`, f:num('sA','a')},
+    {k:'sR', l:`■ ≥ ${CONFIG.STREAK_CRIT} hari berturut`, f:num('sR','r')},
+    {k:'now', l:`Saat ini ≥ ${CONFIG.STREAK_CRIT} hari`, f:num('now','r')},
+    {k:'maxS', l:'Terpanjang (hari)'},
+    {k:'rPW', l:'Rata-rata libur per minggu', f:x=>fmt(x.rPW,2)},
+    {k:'hPW', l:'Rata-rata jam efektif per minggu', f:x=>fmt(x.hPW,1)},
+    {k:'hA', l:`Jam ${CONFIG.WEEK_H_WARN}–${CONFIG.WEEK_H_CRIT} per minggu`, f:num('hA','a')},
+    {k:'hR', l:`Jam > ${CONFIG.WEEK_H_CRIT} per minggu`, f:num('hR','r')},
+  ], groups.map(g=>mk(g, P.filter(p=>gk(p)===g))), {foot:mk('Total', P)});
+  renderRsTable();
+}
+function renderRsTable(){
+  const P = RS.all||[];
+  const CH = [['all','Semua',p=>true,'maxS'],['now',`Saat ini ≥ ${CONFIG.STREAK_CRIT} hari belum OFF`,p=>p.lC==='r','cur'],
+    ['crit',`Pernah ≥ ${CONFIG.STREAK_CRIT} hari berturut`,p=>p.lS==='r','maxS'],
+    ['hour',`Jam > ${CONFIG.WEEK_H_CRIT} per minggu`,p=>p.lH==='r','hPW']];
+  $('rsChips').innerHTML = CH.map(([k,l,f])=>`<button class="chip ${RS.chip===k?'on':''}" data-k="${k}">${l}<span class="c">${fmt(P.filter(f).length)}</span></button>`).join('');
+  $('rsChips').querySelectorAll('.chip').forEach(b=>b.onclick=()=>{ RS.chip=b.dataset.k; const c=CH.find(c=>c[0]===RS.chip); SORT.tRsDrv={k:c[3],asc:false}; renderRsTable(); });
+  const c = CH.find(c=>c[0]===RS.chip)||CH[0], q=RS.q.toLowerCase();
+  const list = P.filter(p=>c[2](p) && (!q||p.nama.toLowerCase().includes(q)||p.nik.toLowerCase().includes(q)));
+  $('rsCount').textContent = `${fmt(list.length)} orang`;
+  if(!SORT.tRsDrv) SORT.tRsDrv = {k:'maxS', asc:false};
+  sortTable('tRsDrv', [
+    {k:'nama', l:'Nama', al:'l', f:p=>`${p.nama}${sub(p.nik)}`}, {k:'site', l:'Site', al:'l'}, {k:'job', l:'Jabatan', al:'l'},
+    {k:'cur', l:'Saat ini (hari berturut)', f:p=>p.cur==null?'–':badge(p.cur,p.lC)+(p.curStart?sub('sejak '+dLbl(p.curStart)):'')},
+    {k:'lastOff', l:'OFF terakhir', al:'l', f:p=>p.lastOff?dLbl(p.lastOff):'–'},
+    {k:'maxS', l:'Terpanjang di periode', f:p=>badge(p.maxS,p.lS)+(p.maxStart?sub(`${dLbl(p.maxStart)} – ${dLbl(p.maxEnd)}`):'')},
+    {k:'restPW', l:'Libur per minggu', f:p=>p.restPW==null?'–':fmt(p.restPW,2)+sub(`${p.rest} hari libur dalam ${fmt(p.n)} hari (OFF ${p.off})`)},
+    {k:'hPW', l:'Jam kerja efektif per minggu', f:p=>p.hPW==null?'–':badge(p.hPW,p.lH,fmt(p.hPW,1)+' j')+sub(`${fmt(p.hours,0)} jam / ${p.durDays} hari tercatat`)},
+    {k:'offWork', l:'Masuk di hari OFF', f:p=>p.offWork?`<span class="pill a">${p.offWork}</span>`:'0'},
+  ], list, {empty:'Tidak ada orang di kategori ini'});
+}
+
 /* ---- 3 · LAMA KERJA PER HARI ---- */
 function renderDur(rows){
   const dr = rows.filter(r=>r.dur!=null);
@@ -681,9 +828,10 @@ const CHIPS = [
 function people(rows){
   const m={};
   rows.forEach(r=>{
-    const p=m[r.nik]||(m[r.nik]={nik:r.nik,nama:r.nama,site:r.site,fac:r.fac,job:r.job,sched:0,present:0,sakit:0,cuti:0,izin:0,mangkir:0,lain:0,durN:0,durSum:0,long12:0,maxDur:0,rcCmp:0,rcChg:0,lkDays:0,wDays:0,noLc:0,lcTot:0});
+    const p=m[r.nik]||(m[r.nik]={nik:r.nik,nama:r.nama,site:r.site,fac:r.fac,job:r.job,sched:0,present:0,sakit:0,cuti:0,izin:0,mangkir:0,lain:0,durN:0,durSum:0,long12:0,maxDur:0,rcCmp:0,rcChg:0,lkDays:0,maxS:0});
     if(RC_CHG.includes(r.rc)) { p.rcChg++; p.rcCmp++; } else if(r.rc==='SAMA') p.rcCmp++;
     if(r.trip) p.lkDays++;
+    if(r.streak>p.maxS) p.maxS=r.streak;
     if(r.status==='OFF') return;
     p.sched++; if(r.present) p.present++;
     else if(r.status==='SAKIT') p.sakit++; else if(r.status==='CUTI') p.cuti++; else if(r.status==='IZIN') p.izin++; else if(r.status==='ALPA') p.mangkir++; else p.lain++;
@@ -705,6 +853,7 @@ const PCOLS = [
   {k:'dur', l:'Rata-rata lama kerja', f:p=>hhmm(p.dur)},
   {k:'long12', l:'Kerja > 12 jam (hari)', f:p=>p.long12?`${p.long12}${sub('terlama '+hhmm(p.maxDur))}`:'0'},
   {k:'lkDays', l:'Hari luar kota'},
+  {k:'maxS', l:'Kerja berturut terpanjang (hari)', f:p=>badge(p.maxS, lvl(p.maxS,CONFIG.STREAK_WARN,CONFIG.STREAK_CRIT))},
 ];
 function renderPersonTable(){
   const q=$('q').value.trim().toLowerCase();
@@ -715,8 +864,8 @@ function renderPersonTable(){
   PERSON._shown = sortTable('tPerson', PCOLS, list, {empty:'Tidak ada driver di kategori ini'});
 }
 function downloadCsv(){
-  const head=['NIK','Nama','Site','Facility','Jabatan','Hari wajib masuk','Masuk','Kehadiran %','Sakit','Cuti','Izin','Mangkir','Tanpa keterangan','Rata-rata lama kerja','Kerja > 12 jam (hari)','Kerja terlama','Hari luar kota (trip)'];
-  const rows = (PERSON._shown||[]).map(p=>[p.nik,`"${p.nama}"`,p.site,p.fac,p.job,p.sched,p.present,p.att==null?'':p.att.toFixed(1),p.sakit,p.cuti,p.izin,p.mangkir,p.lain,hhmm(p.dur),p.long12,hhmm(p.maxDur||null),p.lkDays]);
+  const head=['NIK','Nama','Site','Facility','Jabatan','Hari wajib masuk','Masuk','Kehadiran %','Sakit','Cuti','Izin','Mangkir','Tanpa keterangan','Rata-rata lama kerja','Kerja > 12 jam (hari)','Kerja terlama','Hari luar kota (trip)','Kerja berturut terpanjang (hari)'];
+  const rows = (PERSON._shown||[]).map(p=>[p.nik,`"${p.nama}"`,p.site,p.fac,p.job,p.sched,p.present,p.att==null?'':p.att.toFixed(1),p.sakit,p.cuti,p.izin,p.mangkir,p.lain,hhmm(p.dur),p.long12,hhmm(p.maxDur||null),p.lkDays,p.maxS]);
   const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([[head.join(','),...rows.map(r=>r.join(','))].join('\n')],{type:'text/csv'}));
   a.download=`daftar_driver_${$('fFrom').value}_${$('fTo').value}.csv`; a.click();
 }
@@ -910,7 +1059,7 @@ function downloadLkCsv(){
 /* ================= LOAD ================= */
 function parseText(txt){ return Papa.parse(txt,{header:true,skipEmptyLines:true}).data; }
 function boot(raw, updLabel){
-  prepare(raw); buildTrips();
+  prepare(raw); buildStreaks(); buildTrips();
   if(!ROWS.length){ $('state').innerHTML='<b>Data kosong.</b> Cek file CSV di folder data/.'; return; }
   $('state').classList.add('hidden'); $('app').classList.remove('hidden');
   $('upd').innerHTML = updLabel;
