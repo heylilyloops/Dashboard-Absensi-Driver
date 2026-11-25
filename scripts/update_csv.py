@@ -385,6 +385,10 @@ def sync_lc(gc, min_date=""):
             print(f"LC {tab}: gagal ({e})")
     if frames:
         out = pd.concat(frames, ignore_index=True).drop_duplicates(["TRANSNO"])
+        info["rows_all"] = len(out)
+        # dashboard hanya memakai LC luar kota -> simpan yang luar kota & kolom yang dipakai saja (file kecil, dashboard cepat)
+        out = out[out["SHIP_AREA"].astype(str).str.contains("luar kota", case=False, na=False)]
+        out = out[["SITE", "TRANSNO", "DATE", "NOPOL", "ARMADA", "DESTINATION", "SHIP_AREA", "DRIVER_ID", "CREW1_ID"]]
         out.to_csv("data/LC.csv", index=False)
         info["status"] = "ok"; info["rows"] = len(out)
         print(f"OK LC.csv: {len(out)} baris")

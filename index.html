@@ -337,7 +337,8 @@ td[style*="184,64,26"] .sub{color:inherit;opacity:.85}
 <script>
 /* ================= CONFIG ================= */
 const CONFIG = {
-  BASE_URL: 'https://raw.githubusercontent.com/heylilyloops/Dashboard-Absensi-Driver/main/data/',
+  BASE_URL: 'data/',         // dari server GitHub Pages yang sama (terkompres & bisa di-cache)
+  FALLBACK_URL: 'https://raw.githubusercontent.com/heylilyloops/Dashboard-Absensi-Driver/main/data/',
   FILES: ['NDC_JABABEKA.csv','NDC_CIKUPA.csv','NDC_SIDOARJO.csv','RDC_TALLO.csv'],
   WATCH_MIN: 4,             // sering tidak masuk: sakit + izin + tanpa ket + mangkir ≥ 4 hari
   NORMAL_H: 8,              // jam kerja normal per hari
@@ -1066,18 +1067,23 @@ function boot(raw, updLabel){
   setupFilters(); render();
 }
 async function load(){
+  const getText = async (base, f, v) => { const r = await fetch(base+f+'?v='+v); if(!r.ok) throw new Error(f+' '+r.status); return r.text(); };
+  const tryBases = async fn => { try { return await fn(CONFIG.BASE_URL); } catch(e){ return await fn(CONFIG.FALLBACK_URL); } };
   try{
-    const bust='?t='+Date.now();
-    const [meta,...txts] = await Promise.all([
-      fetch(CONFIG.BASE_URL+'meta.json'+bust).then(r=>r.ok?r.json():null).catch(()=>null),
-      ...CONFIG.FILES.map(f=>fetch(CONFIG.BASE_URL+f+bust).then(r=>r.ok?r.text():'').catch(()=>''))
+    $('state').querySelector('b').textContent = 'Memuat data…';
+    // meta kecil & selalu baru; file lain pakai versi update harian supaya bisa di-cache browser
+    const meta = await tryBases(base=>fetch(base+'meta.json?t='+Date.now()).then(r=>{ if(!r.ok) throw new Error('meta'); return r.json(); })).catch(()=>null);
+    const v = meta ? encodeURIComponent(meta.updated_at) : Date.now();
+    const base = await tryBases(async b=>{ await getText(b, CONFIG.FILES[CONFIG.FILES.length-1], v); return b; }).catch(()=>CONFIG.BASE_URL);
+    const wantVI = meta && meta.variable_income && meta.variable_income.status==='ok';
+    const [txts, viTxt, lcTxt] = await Promise.all([
+      Promise.all(CONFIG.FILES.map(f=>getText(base,f,v).catch(()=>''))),
+      wantVI ? getText(base,'VI_PERSONEL.csv',v).catch(()=>'') : Promise.resolve(''),
+      getText(base,CONFIG.LC_FILE,v).catch(()=>''),
     ]);
     const raw = txts.flatMap(parseText);
     // daftar MPP Variable Income hanya dipakai untuk menentukan site KLS Jakarta
-    const viP = meta && meta.variable_income && meta.variable_income.status==='ok'
-      ? await fetch(CONFIG.BASE_URL+'VI_PERSONEL.csv'+bust).then(r=>r.ok?r.text():'').then(t=>t?parseText(t):null).catch(()=>null) : null;
-    prepareVI(viP);
-    const lcTxt = await fetch(CONFIG.BASE_URL+CONFIG.LC_FILE+bust).then(r=>r.ok?r.text():'').catch(()=>'');
+    prepareVI(viTxt ? parseText(viTxt) : null);
     prepareLC(lcTxt ? parseText(lcTxt) : null);
     boot(raw, meta ? `Data diperbarui<br><b>${new Date(meta.updated_at).toLocaleString('id-ID',{dateStyle:'medium',timeStyle:'short'})}</b>` : 'Sumber: GitHub CSV');
   }catch(e){
