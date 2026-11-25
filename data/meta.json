@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-11-25T13:12+07:00",
+  "updated_at": "2026-11-25T20:31+07:00",
   "files": {
     "NDC_JABABEKA.csv": 31265,
     "NDC_CIKUPA.csv": 12890,
@@ -390,6 +390,7 @@
       }
     },
     "errors": [],
-    "rows": 34020
+    "rows_all": 34020,
+    "rows": 2830
   }
 }
