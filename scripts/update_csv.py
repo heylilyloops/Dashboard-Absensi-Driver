@@ -234,14 +234,30 @@ def main():
     gc = gspread.authorize(creds)
     for title, fname in SHEETS.items():
         df = read_source(gc, title) if title in SOURCES else None
+        ws = book.worksheet(title)
+        rows = ws.get_all_values(
+            value_render_option="UNFORMATTED_VALUE",
+            date_time_render_option="SERIAL_NUMBER",
+        )
+        header = [str(h).strip() for h in rows[0]]
+        master = pd.DataFrame(rows[1:], columns=header)
         if df is None:
-            ws = book.worksheet(title)
-            rows = ws.get_all_values(
-                value_render_option="UNFORMATTED_VALUE",
-                date_time_render_option="SERIAL_NUMBER",
-            )
-            header = [str(h).strip() for h in rows[0]]
-            df = pd.DataFrame(rows[1:], columns=header)
+            df = master
+        elif "DESCRIPTION" in master.columns:
+            # Keterangan kosong di file sumber -> pakai DESCRIPTION dari tab master (diisi admin pusat)
+            m = master[["NIK", "ABSEN_DATE", "DESCRIPTION"]].copy()
+            m["NIK"] = m["NIK"].astype(str).str.strip()
+            m["ABSEN_DATE"] = m["ABSEN_DATE"].map(norm_date)
+            m["DESCRIPTION"] = m["DESCRIPTION"].astype(str).str.strip()
+            m = m[m["DESCRIPTION"] != ""].drop_duplicates(["NIK", "ABSEN_DATE"], keep="last")
+            mp = dict(zip(zip(m["NIK"], m["ABSEN_DATE"]), m["DESCRIPTION"]))
+            fill = pd.Series([mp.get(k, "") for k in zip(df["NIK"], df["ABSEN_DATE"])], index=df.index)
+            empty = df["DESCRIPTION"].astype(str).str.strip().isin(["", "nan"])
+            use = empty & (fill != "")
+            df.loc[use, "DESCRIPTION"] = fill[use]
+            diff = (~empty) & (fill != "") & (df["DESCRIPTION"].astype(str).str.strip().str.lower() != fill.str.lower())
+            SRC_INFO.setdefault(title, {}).update(master_desc=int(len(m)), master_filled=int(use.sum()), master_conflict=int(diff.sum()))
+            print(f"  {title}: {int(use.sum())} Keterangan kosong diisi dari DESCRIPTION tab master ({int(diff.sum())} beda isi, dipakai versi file sumber)")
         for c in COLUMNS:
             if c not in df.columns:
                 df[c] = ""
