@@ -1,10 +1,10 @@
 {
-  "updated_at": "2026-11-26T13:04+07:00",
+  "updated_at": "2026-11-26T15:11+07:00",
   "files": {
     "NDC_JABABEKA.csv": 33605,
     "NDC_CIKUPA.csv": 13614,
     "NDC_SIDOARJO.csv": 9349,
-    "RDC_TALLO.csv": 2613
+    "RDC_TALLO.csv": 2589
   },
   "variable_income": {
     "status": "ok",
@@ -392,5 +392,15 @@
     "errors": [],
     "rows_all": 34476,
     "rows": 2876
+  },
+  "sources": {
+    "RDC Tallo": {
+      "status": "ok",
+      "tab": "Data Kehadiran_RDC Makassar",
+      "leave_approved": 93,
+      "leave_filled": 0,
+      "rows": 2630,
+      "with_keterangan": 146
+    }
   }
 }
