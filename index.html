@@ -78,6 +78,9 @@ thead th.sorted::after{content:" ▾";color:var(--accent)}
 thead th.sorted.asc::after{content:" ▴"}
 tbody tr:hover{background:#f8fafc}
 tfoot td{font-weight:700;background:#f8fafc;position:sticky;bottom:0;border-top:1px solid var(--line)}
+#tHub tbody{counter-reset:hubno}
+#tHub tbody tr td:first-child::before{counter-increment:hubno;content:counter(hubno)}
+#tHub td.l b{font-weight:600}
 td.num{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12px}
 .pill{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;font-size:11.5px;font-weight:700;font-family:"JetBrains Mono",monospace}
 .pill.g{background:#e7f6e7;color:var(--good-ink)}
@@ -215,6 +218,11 @@ td[style*="184,64,26"] .sub{color:inherit;opacity:.85}
     <!-- RINGKASAN -->
     <div class="sec-title"><h2>Ringkasan</h2><span id="periodLbl"></span></div>
     <div class="sum3" id="sum"></div>
+    <div class="card" style="margin-top:14px">
+      <h3>Rekap kehadiran per facility</h3>
+      <div class="desc">Format laporan Hub · total hari kerja = hari wajib masuk (di luar OFF) · warna sel makin pekat = makin banyak hari · % hadir: hijau ≥ 97%, kuning 95–97%, merah &lt; 95% · klik judul kolom untuk mengurutkan</div>
+      <div class="tbl-wrap flat"><table id="tHub" class="hubtbl"></table></div>
+    </div>
 
     <!-- 1 -->
     <div class="sec-title"><h2>1 · Kehadiran per Hari</h2><span>rata-rata jumlah orang yang masuk kerja tiap hari Senin–Minggu · klik judul kolom untuk mengurutkan</span></div>
@@ -620,12 +628,40 @@ function render(){
     tile('% Cuti, sakit & izin', A.sched?fmt(P3[2],2)+'%':'–', `Cuti ${fmt(A.abs.CUTI)} · Sakit ${fmt(A.abs.SAKIT)} · Izin ${fmt(A.abs.IZIN)} · Tanpa keterangan ${fmt(A.abs.LAINNYA)}`, rate(oth(A),A.sched), B&&rate(oth(B),B.sched), true) +
     tile('Kerja lebih dari 12 jam sehari ⚠', l12==null?'–':fmt(l12,1)+'%', `${fmt(A.long12)} dari ${fmt(A.durN)} hari kerja · rata-rata kerja ${hhmm(A.durN?A.durSum/A.durN:null)} sehari`, l12, B&&rate(B.long12,B.durN), true, A.long12?'hub bad':'hub good');
 
+  renderHub(rows, P3[0]);
   renderAttDow(rows);
   renderStatDow(rows);
   renderRoster2(rows);
   renderDur(rows);
   renderTrips();
   PERSON = people(rows); renderChips(); renderPersonTable();
+}
+
+/* ---- REKAP PER FACILITY (format laporan Hub) ---- */
+function renderHub(rows, totAtt){
+  const groups = uniq(rows.map(r=>r.fac)).filter(Boolean);
+  const mk = (rs, g) => { const a = agg(rs);
+    return {g, site: uniq(rs.map(r=>r.site)).join(', '), kar:a.people.size, sched:a.sched, hadir:a.present,
+      CUTI:a.abs.CUTI, SAKIT:a.abs.SAKIT, IZIN:a.abs.IZIN, LAINNYA:a.abs.LAINNYA, ALPA:a.abs.ALPA, att:rate(a.present,a.sched)}; };
+  const data = groups.map(g=>mk(rows.filter(r=>r.fac===g), g));
+  const tot = mk(rows, 'GRAND TOTAL'); tot.site=''; if(totAtt!=null) tot.att=totAtt; tot._st=false;
+  const mx = k => Math.max(1, ...data.map(d=>d[k]));
+  const heat = (k, rgb) => r => { if(r._st===false || !r[k]) return ''; const a = 0.12 + 0.7*r[k]/mx(k); return `background:rgba(${rgb},${a.toFixed(2)});${a>0.55?'color:#fff;':''}`; };
+  const attSt = r => r.att==null ? '' : `color:${r.att>=97?'#15803d':r.att>=95?'#b45309':'#c81e1e'};font-weight:600`;
+  sortTable('tHub', [
+    {k:'_no', l:'No', f:r=>r._st===false?'':''},
+    {k:'g', l:'Facility', al:'l', f:r=>`<b>${r.g}</b>`},
+    {k:'site', l:'Site', al:'l'},
+    {k:'kar', l:'Total karyawan'},
+    {k:'sched', l:'Total hari kerja'},
+    {k:'hadir', l:'Hadir', st:r=>r._st===false?'':'background:rgba(34,160,90,.12)'},
+    {k:'CUTI', l:'Cuti', st:heat('CUTI','42,120,214')},
+    {k:'SAKIT', l:'Sakit', st:heat('SAKIT','208,59,59')},
+    {k:'IZIN', l:'Izin', st:heat('IZIN','217,140,20')},
+    {k:'LAINNYA', l:'Tanpa ket.', st:heat('LAINNYA','120,120,120')},
+    {k:'ALPA', l:'Mangkir', st:heat('ALPA','185,28,28')},
+    {k:'att', l:'% Hadir', f:r=>r.att==null?'–':fmt(r.att,2)+'%', st:attSt},
+  ], data, {key:'g', asc:true, foot:tot});
 }
 
 /* ---- 1 · KEHADIRAN PER HARI ---- */
