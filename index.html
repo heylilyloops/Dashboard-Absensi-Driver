@@ -78,8 +78,8 @@ thead th.sorted::after{content:" ▾";color:var(--accent)}
 thead th.sorted.asc::after{content:" ▴"}
 tbody tr:hover{background:#f8fafc}
 tfoot td{font-weight:700;background:#f8fafc;position:sticky;bottom:0;border-top:1px solid var(--line)}
-.sd-chart{position:relative;margin:4px 0 14px;--s-in:#257de0;--s-not:#f47230;--s-off:#c3cad5}
-.sd-legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12px;color:var(--ink-2);margin:6px 0 2px;--s-in:#257de0;--s-not:#f47230;--s-off:#c3cad5}
+.sd-chart{position:relative;margin:4px 0 14px;--s-in:#257de0;--s-not:#f47230;--s-off:#8b96a8}
+.sd-legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12px;color:var(--ink-2);margin:6px 0 2px;--s-in:#257de0;--s-not:#f47230;--s-off:#8b96a8}
 .sd-legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
 .sd-chart svg{display:block;width:100%;overflow:visible}
 .sd-chart .hit{fill:transparent;cursor:default}
@@ -245,7 +245,7 @@ td[style*="184,64,26"] .sub{color:inherit;opacity:.85}
     <div class="card" style="margin-top:14px">
       <h3>Status MPP per hari</h3>
       <div class="desc">Rata-rata jumlah orang per hari menurut statusnya · masuk + OFF + tidak masuk = total MPP yang terjadwal hari itu</div>
-      <div class="sd-legend"><span><i style="background:var(--s-in)"></i>Masuk kerja</span><span><i style="background:var(--s-not)"></i>Tidak masuk (cuti, sakit, izin, mangkir, tanpa ket.)</span><span><i style="background:var(--s-off)"></i>OFF</span><span style="margin-left:auto">angka di atas batang = % kehadiran (masuk ÷ masuk + tidak masuk)</span></div>
+      <div class="sd-legend"><span><i style="background:var(--s-in)"></i>Masuk kerja</span><span><i style="background:var(--s-not)"></i>Tidak masuk (cuti, sakit, izin, mangkir, tanpa ket.)</span><span><i style="background:var(--s-off)"></i>OFF</span><span style="margin-left:auto">arahkan kursor ke grafik untuk rincian &amp; % kehadiran per hari</span></div>
       <div class="sd-chart" id="cStatDow"></div>
       <div class="tbl-wrap flat"><table id="tStatDow"></table></div>
     </div>
@@ -717,41 +717,44 @@ let _sdT; window.addEventListener('resize',()=>{ clearTimeout(_sdT); _sdT=setTim
 function renderStatChart(data, notIn, tot){
   const el = $('cStatDow'); const get = k => data.find(o=>o.k===k);
   const IN = get('MASUK'), OFF = get('OFF');
-  const W = Math.max(el.clientWidth||900, 480), H = 260, m = {t:22, r:8, b:26, l:40};
+  const W = Math.max(el.clientWidth||900, 360), H = 260, m = {t:20, r:W<600?14:26, b:26, l:40};
   const pw = W-m.l-m.r, ph = H-m.t-m.b;
-  const maxV = Math.max(1, ...DAYS.map((d,i)=>tot['d'+i]));
-  const step = maxV>400?200:maxV>200?100:maxV>80?20:10, top = Math.ceil(maxV/step)*step;
-  const y = v => m.t + ph - v/top*ph, bw = Math.min(64, pw/7*0.56), gap = 2;
+  const S = [
+    {k:'in',  l:'Masuk kerja', c:'var(--s-in)',  v:i=>IN?IN['d'+i]:0},
+    {k:'off', l:'OFF',         c:'var(--s-off)', v:i=>OFF?OFF['d'+i]:0},
+    {k:'not', l:'Tidak masuk', c:'var(--s-not)', v:i=>notIn['d'+i]},
+  ];
+  const maxV = Math.max(1, ...S.flatMap(s=>DAYS.map((d,i)=>s.v(i))));
+  const step = maxV>400?200:maxV>200?100:maxV>80?20:10, top = Math.ceil(maxV*1.08/step)*step;
+  const x = i => m.l + pw*(i+.5)/7, y = v => m.t + ph - v/top*ph;
   let g = '';
-  for(let v=0; v<=top; v+=step) g += `<line x1="${m.l}" x2="${W-m.r}" y1="${y(v)}" y2="${y(v)}" stroke="var(--grid)" ${v===0?'stroke="#cbd5e1"':''}/><text x="${m.l-6}" y="${y(v)+4}" text-anchor="end" font-size="11" fill="var(--muted)">${fmt(v)}</text>`;
-  const rr = (x,y0,w,h,rad) => h<=0 ? '' : rad ? `<path d="M${x},${y0+h} V${y0+Math.min(rad,h)} Q${x},${y0} ${x+Math.min(rad,w/2)},${y0} H${x+w-Math.min(rad,w/2)} Q${x+w},${y0} ${x+w},${y0+Math.min(rad,h)} V${y0+h} Z"` : `<rect x="${x}" y="${y0}" width="${w}" height="${h}"`;
-  let bars = '', hits = '';
-  DAYS.forEach((d,i)=>{
-    const cx = m.l + pw/7*(i+.5), x = cx-bw/2;
-    const segs = [[IN?IN['d'+i]:0,'var(--s-in)'],[notIn['d'+i],'var(--s-not)'],[OFF?OFF['d'+i]:0,'var(--s-off)']];
-    let acc = 0; const last = segs.map(s=>s[0]>0).lastIndexOf(true);
-    segs.forEach(([v,c],j)=>{ if(v<=0) return; const y1 = y(acc+v), y0 = y(acc); const h = Math.max(0, y0-y1-(j<last?gap:0));
-      bars += `${rr(x, y1+(j<last?gap:0), bw, h, j===last?4:0)} fill="${c}"/>`; acc += v; });
-    const att = (IN&&tot['d'+i]) ? IN['d'+i]/(IN['d'+i]+notIn['d'+i])*100 : null;
-    if(IN&&IN['d'+i]>top*0.08) bars += `<text x="${cx}" y="${y(IN['d'+i])+16}" text-anchor="middle" font-size="11" font-weight="600" fill="#fff">${fmt(IN['d'+i],0)}</text>`;
-    if(att!=null) bars += `<text x="${cx}" y="${y(tot['d'+i])-6}" text-anchor="middle" font-size="11" fill="var(--ink-2)">${fmt(att,1)}%</text>`;
-    bars += `<text x="${cx}" y="${H-8}" text-anchor="middle" font-size="12" fill="var(--ink-2)">${d}</text>`;
-    hits += `<rect class="hit" data-i="${i}" x="${m.l+pw/7*i}" y="${m.t}" width="${pw/7}" height="${ph}"/>`;
+  for(let v=0; v<=top; v+=step) g += `<line x1="${m.l}" x2="${W-m.r}" y1="${y(v)}" y2="${y(v)}" stroke="${v===0?'#cbd5e1':'var(--grid)'}"/><text x="${m.l-6}" y="${y(v)+4}" text-anchor="end" font-size="11" fill="var(--muted)">${fmt(v)}</text>`;
+  DAYS.forEach((d,i)=> g += `<text x="${x(i)}" y="${H-8}" text-anchor="middle" font-size="12" fill="var(--ink-2)">${W<600?d.slice(0,3):d}</text>`);
+  let lines = '';
+  S.forEach(s=>{
+    const pts = DAYS.map((d,i)=>[x(i), y(s.v(i))]);
+    lines += `<polyline points="${pts.map(p=>p.join(',')).join(' ')}" fill="none" stroke="${s.c}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+    pts.forEach(([px,py])=> lines += `<circle cx="${px}" cy="${py}" r="4" fill="${s.c}" stroke="#fff" stroke-width="2"/>`);
+    // label nilai hanya untuk masuk kerja (garis utama) — selektif
+    if(s.k==='in') DAYS.forEach((d,i)=> lines += `<text x="${x(i)}" y="${y(s.v(i))-10}" text-anchor="middle" font-size="11" font-weight="600" fill="var(--ink)">${fmt(s.v(i),0)}</text>`);
   });
-  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" height="${H}" role="img" aria-label="Rata-rata status MPP per hari Senin sampai Minggu">${g}${bars}${hits}</svg><div class="sd-tip"></div>`;
-  const tip = el.querySelector('.sd-tip');
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" height="${H}" role="img" aria-label="Tren rata-rata status MPP per hari Senin sampai Minggu">${g}${lines}<line class="xh" y1="${m.t}" y2="${m.t+ph}" stroke="#94a3b8" stroke-dasharray="3 3" style="display:none"/><rect class="hitall" x="${m.l}" y="${m.t}" width="${pw}" height="${ph}" fill="transparent"/></svg><div class="sd-tip"></div>`;
+  const tip = el.querySelector('.sd-tip'), xh = el.querySelector('.xh'), hit = el.querySelector('.hitall'), svg = el.querySelector('svg');
   const rowsT = [['MASUK','Masuk kerja','var(--s-in)'],['CUTI','Cuti'],['SAKIT','Sakit'],['IZIN','Izin'],['ALPA','Mangkir'],['LAINNYA','Tanpa keterangan'],['OFF','OFF','var(--s-off)']];
-  el.querySelectorAll('.hit').forEach(h=>{
-    h.onmousemove = ev => { const i=+h.dataset.i; const inV = IN?IN['d'+i]:0, nv = notIn['d'+i];
-      const att = inV+nv ? inV/(inV+nv)*100 : null;
-      tip.innerHTML = `<b>${DAYS[i]} · rata-rata per hari</b>` + rowsT.map(([k,l,c])=>{ const o=get(k); if(!o||(!o['d'+i]&&k!=='MASUK'&&k!=='OFF')) return ''; 
-          return `<div class="r"><span>${c?`<i style="background:${c}"></i>`:'&nbsp;&nbsp;&nbsp;'}${l}</span><span>${fmt(o['d'+i],1)}</span></div>`; }).join('')
-        + `<div class="r"><span><i style="background:var(--s-not)"></i>Total tidak masuk</span><span>${fmt(nv,1)}</span></div>`
-        + `<div class="r" style="border-top:1px solid var(--line);margin-top:4px;padding-top:4px"><span>Total MPP terjadwal</span><span>${fmt(tot['d'+i],1)}</span></div>`
-        + `<div class="r"><span>% kehadiran</span><span><b style="display:inline;margin:0">${att==null?'–':fmt(att,1)+'%'}</b></span></div>`;
-      tip.style.display='block'; const r = el.getBoundingClientRect(); let lx = ev.clientX-r.left+14; if(lx+210>r.width) lx = ev.clientX-r.left-214; tip.style.left=lx+'px'; tip.style.top=(ev.clientY-r.top-20)+'px'; };
-    h.onmouseleave = () => tip.style.display='none';
-  });
+  hit.onmousemove = ev => {
+    const r = svg.getBoundingClientRect(), sx = (ev.clientX-r.left)*W/r.width;
+    const i = Math.max(0, Math.min(6, Math.floor((sx-m.l)/pw*7)));
+    xh.setAttribute('x1', x(i)); xh.setAttribute('x2', x(i)); xh.style.display='';
+    const inV = IN?IN['d'+i]:0, nv = notIn['d'+i], att = inV+nv ? inV/(inV+nv)*100 : null;
+    tip.innerHTML = `<b>${DAYS[i]} · rata-rata per hari</b>` + rowsT.map(([k,l,c])=>{ const o=get(k); if(!o||(!o['d'+i]&&k!=='MASUK'&&k!=='OFF')) return '';
+        return `<div class="r"><span>${c?`<i style="background:${c}"></i>`:'&nbsp;&nbsp;&nbsp;'}${l}</span><span>${fmt(o['d'+i],1)}</span></div>`; }).join('')
+      + `<div class="r"><span><i style="background:var(--s-not)"></i>Total tidak masuk</span><span>${fmt(nv,1)}</span></div>`
+      + `<div class="r" style="border-top:1px solid var(--line);margin-top:4px;padding-top:4px"><span>Total MPP terjadwal</span><span>${fmt(tot['d'+i],1)}</span></div>`
+      + `<div class="r"><span>% kehadiran</span><span><b style="display:inline;margin:0">${att==null?'–':fmt(att,1)+'%'}</b></span></div>`;
+    tip.style.display='block'; const er = el.getBoundingClientRect(); const px = x(i)*r.width/W;
+    let lx = px+14; if(lx+210>er.width) lx = px-224; tip.style.left=lx+'px'; tip.style.top=(ev.clientY-er.top-20)+'px';
+  };
+  hit.onmouseleave = () => { tip.style.display='none'; xh.style.display='none'; };
 }
 
 /* ---- 2 · ROSTER PLAN VS AKTUAL ---- */
