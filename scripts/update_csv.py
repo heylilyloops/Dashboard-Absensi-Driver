@@ -42,13 +42,16 @@ ROSTER_STATUS = {
 SOURCES = {
     "RDC Tallo": {
         "id": "161VFS8gaLSB9Ja48fgHczxTkgFFqwGIEVls4yJVtLj8",
-        "tab": "Data Kehadiran",
+        "tab": "Data Kehadiran",          # dicocokkan sebagai awalan nama tab (mis. 'Data Kehadiran_RDC Makassar')
+        "tab_prefer": "Makassar",
         "cols": {"Date": "ABSEN_DATE", "Emp ID": "NIK", "Emp Name": "NAMA", "Job Ttl Name": "JOBDESK",
                  "BU": "FACILITY", "Check In": "TIME ABSEN IN", "Check Out": "TIME ABSEN OUT",
                  "Schedule": "ROSTER", "Keterangan": "DESCRIPTION"},
-        "radius_tab": "MSSCicoList",
+        "radius_tab": "MSSCicoList",       # awalan (mis. 'MSSCicoList_Makassar')
+        "leave_tab": "Pengajuan",          # pengajuan cuti/sakit/perdin yang APPROVED -> isi Keterangan yang kosong
     },
 }
+SRC_INFO = {}  # status pembacaan file sumber -> ditulis ke meta.json
 SHIFT_RE = re.compile(r"^\s*(\S+)\s+(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})")
 
 COLUMNS = [
@@ -150,7 +153,17 @@ def read_source(gc, title):
     src = SOURCES[title]
     try:
         sh = gc.open_by_key(src["id"])
-        rows = sh.worksheet(src["tab"]).get_all_values(
+        titles = [w.title for w in sh.worksheets()]
+        def pick(prefix, prefer=None):
+            if prefix in titles: return prefix
+            c = [t for t in titles if t.lower().startswith(prefix.lower())]
+            if prefer: c = sorted(c, key=lambda t: prefer.lower() not in t.lower())
+            if not c: raise ValueError(f"tab '{prefix}*' tidak ditemukan, tab yang ada: {titles}")
+            return c[0]
+        tab = pick(src["tab"], src.get("tab_prefer"))
+        print(f"  {title}: tab sumber = '{tab}'")
+        SRC_INFO[title] = {"status": "ok", "tab": tab}
+        rows = sh.worksheet(tab).get_all_values(
             value_render_option="UNFORMATTED_VALUE", date_time_render_option="SERIAL_NUMBER")
         hi = next(i for i, r in enumerate(rows) if "Emp ID" in [str(x).strip() for x in r])
         header = [str(h).strip() for h in rows[hi]]
@@ -162,7 +175,7 @@ def read_source(gc, title):
         # status radius dari log absen (MSSCicoList): InRadius In / Out = T/F
         if src.get("radius_tab"):
             try:
-                rr = sh.worksheet(src["radius_tab"]).get_all_values(
+                rr = sh.worksheet(pick(src["radius_tab"], src.get("tab_prefer"))).get_all_values(
                     value_render_option="UNFORMATTED_VALUE", date_time_render_option="SERIAL_NUMBER")
                 rad = pd.DataFrame(rr[1:], columns=[str(h).strip() for h in rr[0]])
                 rad = rad[["Emp ID", "Date", "InRadius In", "InRadius Out"]].copy()
@@ -176,11 +189,33 @@ def read_source(gc, title):
                 df = df.merge(rad[["NIK", "ABSEN_DATE", "ABSEN IN", "ABSEN OUT"]], on=["NIK", "ABSEN_DATE"], how="left")
             except Exception as e:  # noqa: BLE001
                 print(f"  {title}: status radius tidak terbaca ({e})")
+        # pengajuan approved (cuti/sakit/izin/perdin) -> isi Keterangan yang masih kosong
+        if src.get("leave_tab") and src["leave_tab"] in titles:
+            try:
+                lv = sh.worksheet(src["leave_tab"]).get_all_values(
+                    value_render_option="UNFORMATTED_VALUE", date_time_render_option="SERIAL_NUMBER")
+                lv = pd.DataFrame(lv[1:], columns=[str(h).strip() for h in lv[0]])
+                lv = lv[lv["Status"].astype(str).str.strip().str.upper() == "APPROVED"].copy()
+                lv["NIK"] = lv["Employee Code"].astype(str).str.strip()
+                lv["ABSEN_DATE"] = lv["Leave Date"].map(norm_date)
+                lv = lv.drop_duplicates(["NIK", "ABSEN_DATE"], keep="last").set_index(["NIK", "ABSEN_DATE"])["Leave Type"]
+                key = list(zip(df["NIK"], df["ABSEN_DATE"]))
+                fill = pd.Series([lv.get(k, "") for k in key], index=df.index).astype(str)
+                empty = df["DESCRIPTION"].astype(str).str.strip() == ""
+                has_t = (df["TIME ABSEN IN"].astype(str).str.strip() != "") & (df["TIME ABSEN IN"].astype(str) != "nan")
+                use = empty & (fill != "") & (~has_t | fill.str.contains("Dinas|Perdin", case=False))
+                df.loc[use, "DESCRIPTION"] = fill[use]
+                SRC_INFO[title].update(leave_approved=int(len(lv)), leave_filled=int(use.sum()))
+                print(f"  {title}: {len(lv)} pengajuan approved, {int(use.sum())} hari diisi dari tab {src['leave_tab']}")
+            except Exception as e:  # noqa: BLE001
+                print(f"  {title}: tab pengajuan tidak terbaca ({e})")
         ket = (df["DESCRIPTION"].astype(str).str.strip() != "").sum()
+        SRC_INFO[title].update(rows=int(len(df)), with_keterangan=int(ket))
         print(f"  {title}: dibaca dari file sumber ({len(df)} baris, {ket} dengan Keterangan)")
         return df
     except Exception as e:  # noqa: BLE001
         print(f"  {title}: file sumber tidak bisa dibuka ({e}) -> pakai tab di sheet master")
+        SRC_INFO[title] = {"status": "fallback", "error": str(e)[:300]}
         return None
 
 
@@ -229,6 +264,7 @@ def main():
 
     meta["variable_income"] = sync_variable_income(all_niks, min_date)
     meta["lc"] = sync_lc(gc, min_date)
+    meta["sources"] = SRC_INFO
 
     with open("data/meta.json", "w") as f:
         json.dump(meta, f, indent=2)
